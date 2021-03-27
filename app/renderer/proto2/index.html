@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chat</title>
+
+    <link rel="stylesheet" href="style.css?v=0.8.4.alpha&sv=0.0.9">
+
+    <!-- forge for encryption -->
+    <script src="https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js" integrity="sha384-sgzMi6V7PVuBrH3D+OTG6gR4GjgQCsSSUYFcGoGCNr5ks7Sr3WrS+zNv5H33fTY5" crossorigin="anonymous"></script>
+
+    <!-- google fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- JQUERY -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script>
+
+    <!-- own js scripts -->
+    <script src="script.js?v=0.8.4.alpha&sv=0.2.6"></script>
+
+</head>
+
+<body class="dark fullsize container">
+    <main class="filling centered container">
+    </main>
+    <script>
+        document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+        window.addEventListener('resize', () => {
+            document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' data:">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="main.css">
+    <title>Krypton Beta</title>
+</head>
+
+<body>
+    <main>
+        <div id="sideMenu">
+            <div id="sideMenuFocuser" onclick="toggleSideMenu()"></div>
+            <div id="ownProfile">
+                <div>
+                    <span id="ownUserName"></span>
+                    <button><span class="material-icons">edit
+                        </span></button>
+                </div>
+            </div>
+            <div id="sideMenuActions">
+
+                <button onclick="">
+                    <span class="material-icons">create</span>
+                    New Chat
+                </button>
+                <button onclick="">
+                    <span class="material-icons">group</span>
+                    New Group
+                </button>
+                <button onclick="">
+                    <span class="material-icons">settings</span>
+                    Settings
+                </button>
+                <button onclick="logout()">
+                    <span class="material-icons">logout</span>
+                    Sign Out
+                </button>
+            </div>
+            <div id="sideMenuFooter">
+                <span>Krypton Desktop</span>
+                <span>Beta Version</span>
+            </div>
+        </div>
+        <div id="searchBar"><button id="menuOpener" onclick="toggleSideMenu()">
+                <div></div>
+                <div></div>
+                <div></div>
+            </button>
+            <div id="searchInputContainer"><input type="text" placeholder="Search"><span>✕</span></div>
+        </div>
+        <div id="contactList"></div>
+        <div id="messageView">
+            <div id="contactInformation"></div>
+            <div id="messageContainer"></div>
+            <div id="messageActionArea"></div>
+        </div>
+    </main>
+
+
+    <script>
+        const logout = () => {
+            window.ipc.send('logout', {});
+        }
+
+        const toggleSideMenu = () => {
+            document.getElementById('sideMenu').classList.toggle('open');
+        }
+        
+        const createChatTile = (data) => {
+            console.log(data);
+            let  contactContainer =document.createElement("div");
+            contactContainer.classList.add("contactContainer");
+            
+            let profilePicture =document.createElement("div");
+            profilePicture.classList.add("profilePicture");
+            if(data.profilePicture) profilePicture.style.setProperty("--profilePicture", "url("+data.profilePicture+")");
+            contactContainer.appendChild(profilePicture);
+            
+            let contactName = document.createElement("span");
+            contactName.classList.add("contactName");
+            contactName.appendChild(document.createTextNode(data.username));
+            contactContainer.appendChild(contactName);
+            
+            let messagePreview = document.createElement("span");
+            messagePreview.classList.add("messagePreview");
+            messagePreview.appendChild(document.createTextNode(data.lastMessage.message.value));
+            contactContainer.appendChild(messagePreview);
+            
+            return contactContainer
+        }
+
+        window.ipc.send('contactList', {
+            request: true
+        });
+
+        window.ipc.send('ownProfile', {
+            request: true
+        });
+
+
+
+        window.ipc.listen((e, response) => {
+            switch (response.trigger) {
+                case "contactList":
+                    console.log("recieved contact list");
+                    for (var i of response.data) {
+                        document.getElementById("contactList").appendChild(createChatTile(i));
+                    }
+                    break;
+
+                case "ownProfile":
+                    console.log("recieved profile information");
+                    document.getElementById("ownUserName").appendChild(document.createTextNode("@" + response.data.username));
+                    if (response.data.profilePictureURI) document.getElementById("ownProfile").style.setProperty("--profilePicture", "url(" + response.data.profilePictureURI + ")");
+                    break;
+            }
+        });
+
+    </script>
+</body>
+
+</html>

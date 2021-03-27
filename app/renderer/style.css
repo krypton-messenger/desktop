@@ -1,0 +1,143 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    overflow: hidden;
+}
+
+@font-face {
+    font-family: materialIcons;
+    src: url(resources/MaterialIcons-Regular.ttf);
+}
+
+@font-face {
+    font-family: poppins;
+    src: url(resources/poppins/Poppins-Regular.ttf);
+}
+
+
+/*open sans*/
+@font-face {
+    font-family: openSans;
+    font-style: normal;
+    font-weight: 300;
+    src: url(resources/openSans/OpenSans-Light.ttf);
+}
+
+@font-face {
+    font-family: openSans;
+    font-style: normal;
+    font-weight: 400;
+    src: url(resources/openSans/OpenSans-Regular.ttf);
+}
+
+@font-face {
+    font-family: openSans;
+    font-style: normal;
+    font-weight: 500;
+    src: url(resources/openSans/OpenSans-SemiBold.ttf);
+}
+
+@font-face {
+    font-family: openSans;
+    font-style: normal;
+    font-weight: 600;
+    src: url(resources/openSans/OpenSans-Bold.ttf);
+}
+
+@font-face {
+    font-family: openSans;
+    font-style: normal;
+    font-weight: 700;
+    src: url(resources/openSans/OpenSans-ExtraBold.ttf);
+}
+
+@font-face {
+    font-family: openSans;
+    font-style: italic;
+    font-weight: 300;
+    src: url(resources/openSans/OpenSans-LightItalic.ttf);
+}
+
+@font-face {
+    font-family: openSans;
+    font-style: italic;
+    font-weight: 400;
+    src: url(resources/openSans/OpenSans-Italic.ttf);
+}
+
+@font-face {
+    font-family: openSans;
+    font-style: italic;
+    font-weight: 500;
+    src: url(resources/openSans/OpenSans-SemiBoldItalic.ttf);
+}
+
+@font-face {
+    font-family: openSans;
+    font-style: italic;
+    font-weight: 600;
+    src: url(resources/openSans/OpenSans-BoldItalic.ttf);
+}
+
+@font-face {
+    font-family: openSans;
+    font-style: italic;
+    font-weight: 700;
+    src: url(resources/openSans/OpenSans-ExtraBoldItalic.ttf);
+}
+
+
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    /* Preferred icon size */
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Support for IE. */
+    font-feature-settings: 'liga';
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-top: 0;
+    font-weight: lighter;
+    text-align: center;
+    letter-spacing: 1px;
+    font-family: poppins;
+}
+
+p,
+span,
+div,
+button,
+input {
+    font-family: openSans;
+}
+
+a {
+    color: hsl(210deg 40% 50%);
+}
+
+*:focus {
+    outline: none;
+}

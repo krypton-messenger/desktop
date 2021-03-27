@@ -1,0 +1,43 @@
+<input class="inverse" type="button" id="logoutButton" value="logout" onclick="messenger.session.logout();">
+<div class="main container contactsVisible">
+    <div id="settingsButton" onclick="messenger.gui.showSettings()"></div>
+    <div id="settingsContainer">
+        <h1>Settings</h1>
+        <hr>
+        <label for="theme">Theme</label>
+        <select name="theme" id="theme" onchange="messenger.gui.theme.change(this.value)">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="green">Green</option>
+            <option value="red">Red</option>
+            <option value="orange">Orange</option>
+            <option value="cyan">Cyan</option>
+            <option value="space">Space</option>
+        </select>
+        <hr>
+        <input type="button" value="show own fingerprint" onclick="messenger.encryption.showOwnFingerprint()">
+        <hr>
+        <code><b>Available RAM:</b><br><span id="jsHeapSize"></span></code>
+        <hr>
+        <input type="button" value="ok" onclick="messenger.gui.hideSettings()">
+    </div>
+    <div id="contacts">
+        <input name="contactSearch" onkeyup="messenger.gui.contacts.triggerSearch(event, this)" id="contactSearch" placeholder="search users" autocomplete="off" value="" aria-label="search users" aria-placeholder="search users" title="Search for users by their username" role="search">
+
+        <div id="searchResults" aria-label="Search results" role="list" title="Search Results"></div>
+        <div id="currentlySelectedContact"></div>
+        <div id="currentContacts" aria-label="Your current contacts" role="list" title="Current Contacts"></div>
+
+    </div>
+
+    <div id="messageContainer" style="height: 100%">
+
+        <div class="contactName" id="contactName"></div>
+        <div id="messages" onscroll="messenger.gui.messages.handleScroll(this)"></div>
+        <div id="newMessageIndicator" onclick="document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight">⊻</div>
+        <div id="quotedMessage" onclick="messenger.gui.messages.quote=false"></div>
+        <textarea name="messageContent" onkeypress="messenger.gui.contacts.triggerSend(event, this)" id="messageContent" placeholder="type something..." autocomplete="off" disabled="true"></textarea>
+        <div id="attach" onclick="messenger.encryption.file.load(this)" disabled="true"></div>
+        <div id="send" onclick="messenger.gui.contacts.triggerSend(event, this)" disabled="true"></div>
+    </div>
+</div>

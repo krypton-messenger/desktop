@@ -1,0 +1,29 @@
+nav.titleBar {
+    height: 20px;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: #333;
+    text-align: right;
+    user-select: none;
+    line-height: 0;
+}
+
+nav.titleBar span {
+    height: 20px;
+    width: 30px;
+    transition: background var(--transitionduration);
+    display: inline-grid;
+    padding: 3px 0;
+    font-size: .8em;
+    place-items: center;
+}
+
+nav.titleBar span:hover {
+    background: #555;
+}
+
+nav.titleBar span.close:hover {
+    background: #800;
+}
