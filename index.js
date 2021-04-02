@@ -157,9 +157,9 @@ ipcMain.on("message", async (event, arg) => {
             });
             break;
 
-        case "contactList":
+        case "chatList":
             try {
-                var contacts = await apiConnection.getContacts();
+                var contacts = await apiConnection.getChats();
                 console.log("contacts:",contacts);
                 event.reply("message", {
                     trigger: arg.command,

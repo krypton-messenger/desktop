@@ -163,10 +163,14 @@ exports.getPublicKey = async user => {
     }
 }
 
-exports.getMessages = async (chatid, chatKey) => {
+exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
     let response = await request("getmessages", {
-        chatid
+        chatid,
+        limit: limit ?? NaN,
+        offset: offset ?? NaN,
+        desc
     });
+
     let messages = [];
     if (response.success) {
         for (var i of response.data) {
@@ -212,7 +216,7 @@ exports.getMessages = async (chatid, chatKey) => {
         }
     }
 }
-exports.getContacts = async () => {
+exports.getChats = async () => {
     let response = await request("getchatkeys", {
         username: config.get("credentials:username")
     });
@@ -221,7 +225,8 @@ exports.getContacts = async () => {
         let contacts = [];
         for (var i in chatInformation) {
             let profilePicture = await exports.getProfilePicture(i);
-            let messages = await exports.getMessages(chatInformation[i].chatId, chatInformation[i].chatKey);
+            let messages = await exports.getMessages(chatInformation[i].chatId, chatInformation[i].chatKey, 1, 0, true);
+            console.log("messagelength", messages)
             contacts.push({
                 username: i,
                 profilePicture,

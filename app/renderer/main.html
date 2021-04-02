@@ -5,6 +5,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' data:">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="main.css">
+    <script src="common.js"></script>
     <title>Krypton Beta</title>
 </head>
 
@@ -50,7 +51,7 @@
             </button>
             <div id="searchInputContainer"><input type="text" placeholder="Search"><span>✕</span></div>
         </div>
-        <div id="contactList"></div>
+        <div id="chatList"></div>
         <div id="messageView">
             <div id="contactInformation"></div>
             <div id="messageContainer"></div>
@@ -67,31 +68,89 @@
         const toggleSideMenu = () => {
             document.getElementById('sideMenu').classList.toggle('open');
         }
-        
+
+        /*
+         * @params data : <message Object> 
+            {
+                direction: "sent" || "recieved",
+                chat_id: <hex-string> "bffbbca16e2284c5604d547d0f3fa72be128051c1100b3e053ad0179f7845fc7a35c4f05380f827e29118217bc836aef9f8a3fe2f968fa809f30a6e3968dd967",
+                encryptionType: <string> "RSA-AES_CBC",
+                timestamp: <iso-date-time-string> "2021-03-28T12:14:30.827Z", 
+                verified: <bool> true,
+                messageType: "text" || "file" || "image",
+                message_id: 383864285,
+                message: {
+                    value: <string> "hello world",
+                    quote: <bool> false || <quote Object> 
+                        {
+                            text: <string> "hello world",
+                            username: <string> "username",
+                            messageId: <int> 372869478
+                        }
+                }
+            }   
+         */
+        const createMessageElement = (data) => {
+            let date = new Date(data.timestamp);
+
+            let messageContainer = document.createElement("div");
+            messageContainer.classList.add("message", data.direction ?? Math.random() > .5 ? "sent" : "recieved");
+            messageContainer.dataset.timestampMinutes = date.getMinutes();
+            messageContainer.dataset.timestampHours = date.getHours();
+
+            let messageContent = document.createElement("div");
+            messageContent.classList.add("messageContent");
+            messageContainer.appendChild(messageContent);
+
+            let contentParagraph = document.createElement("p");
+            contentParagraph.appendChild(markdownConverter(data.message.value));
+            messageContent.appendChild(contentParagraph);
+
+            return messageContainer
+
+        }
+
         const createChatTile = (data) => {
-            console.log(data);
-            let  contactContainer =document.createElement("div");
+            document.getElementById("messageContainer").appendChild(createMessageElement(data.lastMessage));
+            console.log(data.lastMessage);
+            let date = new Date(data.lastMessage.timestamp)
+
+            let contactContainer = document.createElement("div");
             contactContainer.classList.add("contactContainer");
-            
-            let profilePicture =document.createElement("div");
+            contactContainer.dataset.lastMessageTime = date.getTime();
+
+            let profilePicture = document.createElement("div");
             profilePicture.classList.add("profilePicture");
-            if(data.profilePicture) profilePicture.style.setProperty("--profilePicture", "url("+data.profilePicture+")");
+            if (data.profilePicture) profilePicture.style.setProperty("--profilePicture", "url(" + data.profilePicture + ")");
             contactContainer.appendChild(profilePicture);
-            
+
             let contactName = document.createElement("span");
             contactName.classList.add("contactName");
             contactName.appendChild(document.createTextNode(data.username));
             contactContainer.appendChild(contactName);
-            
+
             let messagePreview = document.createElement("span");
             messagePreview.classList.add("messagePreview");
             messagePreview.appendChild(document.createTextNode(data.lastMessage.message.value));
             contactContainer.appendChild(messagePreview);
-            
+
+            let messageTime = document.createElement("span");
+            messageTime.classList.add("messageTime");
+            messageTime.appendChild(document.createTextNode(date.getHours, date.getMinutes));
+            contactContainer.appendChild(messagePreview);
+
             return contactContainer
         }
 
-        window.ipc.send('contactList', {
+        const sortChatTiles = target => {
+            for (var i of [].slice.call(target.childNodes).sort((a, b) => {
+                    return b.dataset.lastMessageTime - a.dataset.lastMessageTime
+                })) {
+                target.appendChild(i);
+            }
+        }
+
+        window.ipc.send('chatList', {
             request: true
         });
 
@@ -103,11 +162,12 @@
 
         window.ipc.listen((e, response) => {
             switch (response.trigger) {
-                case "contactList":
+                case "chatList":
                     console.log("recieved contact list");
                     for (var i of response.data) {
-                        document.getElementById("contactList").appendChild(createChatTile(i));
+                        document.getElementById("chatList").appendChild(createChatTile(i));
                     }
+                    sortChatTiles(document.getElementById("chatList"));
                     break;
 
                 case "ownProfile":

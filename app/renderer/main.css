@@ -25,9 +25,6 @@ main {
     }
 }
 
-#contactList {
-    background: hsl(210deg 10% 20%);
-}
 
 #messageView {
     display: grid;
@@ -142,7 +139,8 @@ main {
 }
 
 
-#contactList {
+#chatList {
+    background: hsl(210deg 10% 20%);
     display: flex;
     flex-direction: column;
     overflow: auto;
