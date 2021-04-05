@@ -4,11 +4,22 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: hsl(210 5% 30%);
+    background-color: hsl(210deg calc(var(--colorIntensity) + 5%) calc(var(--brightness) + 30%));
 }
 
 ::-webkit-scrollbar-corner {
     background: transparent;
+}
+
+:root.light {
+    --colorIntensity: -5%;
+    --brightness: 70%;
+}
+
+:root {
+    transition: --colorIntensity .2s, --brightness .2s;
+    --colorIntensity: 0%;
+    --brightness: 0%;
 }
 
 main {
@@ -16,33 +27,41 @@ main {
     width: 100vw;
     height: 100vh;
     grid-template-columns: minmax(25vw, 260px) 1fr;
-    grid-template-rows: 50px 1fr;
+    grid-template-rows: 52px 1fr;
 }
 
 @media (max-width: 630px) {
     main {
         grid-template-columns: 1fr 0px;
     }
+
+    #messageView.hasMessages {
+        grid-column: 1;
+    }
 }
 
 
 #messageView {
+    transition: grid-column .2s;
     display: grid;
     grid-template-rows: 52px 1fr 45px;
     grid-row: 1 / 3;
     grid-column: 2;
-    border-left: 1px solid hsl(210deg 10% 25%);
+    border-left: 1px solid hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 25%));
 }
 
 #contactInformation {
-    background: hsl(210deg 10% 20%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 20%));
     user-select: none;
 }
 
 
 #messageActionArea {
-    background: hsl(210deg 10% 20%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 20%));
     user-select: none;
+    display: grid;
+    grid-template-columns: 45px 1fr 45px 45px;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
 }
 
 
@@ -53,12 +72,12 @@ main {
     min-width: 300px;
     align-self: flex-start;
     position: relative;
-    color: white;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
     display: flex;
 }
 
 .recieved.message {
-    background: hsl(210deg 15% 25%);
+    background: hsl(210deg calc(var(--colorIntensity) + 15%) calc(var(--brightness) + 25%));
     align-self: flex-start;
     border-top-left-radius: 0px;
 }
@@ -73,19 +92,19 @@ main {
 }
 
 .sent.message {
-    background: hsl(210deg 10% 15%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 15%));
     align-self: flex-end;
     border-top-right-radius: 0px;
 }
 
 .recieved.message::before {
-    border-color: hsl(210deg 15% 25%);
+    border-color: hsl(210deg calc(var(--colorIntensity) + 15%) calc(var(--brightness) + 25%));
     border-left-color: transparent;
     transform: translate(-100%, 0);
 }
 
 .sent.message::before {
-    border-color: hsl(210deg 10% 15%);
+    border-color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 15%));
     border-right-color: transparent;
     right: 0;
     transform: translate(100%, 0);
@@ -103,17 +122,18 @@ main {
 
 
 #messageContainer {
-    background: hsl(220deg 10% 10%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 10%));
     padding: 18px;
     display: flex;
     overflow: auto;
     flex-direction: column-reverse;
-    box-shadow: inset 0 0px 8px 0 black;
+    box-shadow: inset 0 0px 8px 0 hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness)));
 }
 
 .messageContent {
     padding: 8px;
     min-height: 16px;
+    word-break: break-word;
 }
 
 .messageContent p {
@@ -121,7 +141,7 @@ main {
     padding-right: 33px;
 }
 
-#messageContainer:empty {
+#messageContainer:empty:not(#messageView.loading div) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -129,18 +149,50 @@ main {
     box-shadow: none;
 }
 
-#messageContainer:empty:before {
+#messageContainer:empty:not(#messageView.loading div):before {
     content: "Select a chat to start messaging";
-    color: white;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
     font-size: .8em;
-    background: hsla(210deg 20% 20%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
     padding: 5px 10px;
     border-radius: calc(.8em + 10px);
 }
 
+.messageContent .file {
+    display: grid;
+    grid-template-columns: 50px 1fr;
+    grid-template-rows: 25px 25px;
+    column-gap: 15px;
+}
+
+.messageContent .file::before {
+    content: "save";
+    font-family: materialIcons;
+    font-size: 32px;
+    grid-row: 1/3;
+    background: hsl(210deg calc(var(--colorIntensity) + 40%) calc(var(--brightness) + 30%));
+    border-radius: 100%;
+    display: grid;
+    place-items: center;
+}
+
+span.fileTitle {
+    font-size: 0.9em;
+    place-self: self-end;
+}
+
+span.fileSize {
+    font-weight: lighter;
+    font-size: 0.8em;
+}
+
+
+.file.message {
+    cursor: pointer;
+}
 
 #chatList {
-    background: hsl(210deg 10% 20%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 20%));
     display: flex;
     flex-direction: column;
     overflow: auto;
@@ -149,53 +201,57 @@ main {
 }
 
 #searchBar {
-    background: hsl(210deg 10% 20%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 20%));
 }
 
 .profilePicture {
     --profilePicture: linear-gradient(0deg, transparent, transparent);
     grid-column: 1;
     grid-row: 1 / 3;
-    background-image: var(--profilePicture), linear-gradient(45deg, hsl(210deg 10% 30%), hsl(210deg 10% 30%));
+    background-image: var(--profilePicture), linear-gradient(45deg, hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%)), hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%)));
     background-size: cover;
     border-radius: 50%;
     margin: 5px;
     transition: background-image .2s;
 }
 
-.selected.contactContainer {
-    background: hsl(210deg 10% 30%);
+.selected.chatContainer {
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
 }
 
-.selected.contactContainer .profilePicture {
-    background-image: var(--profilePicture), linear-gradient(45deg, hsl(210deg 10% 40%), hsl(210deg 10% 40%));
+.selected.chatContainer .profilePicture {
+    background-image: var(--profilePicture), linear-gradient(45deg, hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 40%)), hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 40%)));
     background-size: cover;
 }
 
-.contactContainer {
+.chatContainer {
     display: grid;
     grid-template-columns: 60px 1fr;
     grid-template-rows: 30px 30px;
     padding: 5px;
     transition: background .2s;
-    border-bottom: 1px solid hsl(210deg 10% 25%);
+    border-bottom: 1px solid hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 25%));
     cursor: pointer;
+    overflow: hidden;
 }
 
-.contactContainer:hover {
-    background: hsl(210deg 10% 25%);
+.chatContainer:hover {
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 25%));
 }
 
 .contactName {
     font-weight: bold;
     padding-top: 7px;
     padding-left: 7px;
-    color: white;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
 }
 
 .messagePreview {
     padding-left: 7px;
     color: hsl(0deg 0% 52%);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: flex;
 }
 
 #searchBar {
@@ -206,14 +262,14 @@ main {
 }
 
 #searchBar input {
-    background: hsl(210deg 10% 30%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
     border: none;
     border-radius: 4px;
     padding: 5px 10px;
     padding-right: 30px;
     box-sizing: border-box;
     outline: none;
-    color: white;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
     width: 100%;
 }
 
@@ -223,19 +279,24 @@ main {
     padding-right: 15px;
 }
 
-#searchBar input ~ span {
+#searchBar input ~ button {
     opacity: 0;
+    background: transparent;
     position: absolute;
+    border: 0;
+    font-size: 1em;
+    display: flex;
+    padding: 0;
     top: 50%;
     right: 0;
-    transform: translate(-150%, -52%) rotate(45deg) scale(.75);
-    color: white;
+    transform: translate(-1.75ch, -50%) rotate(45deg) scale(.75);
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
     transition: opacity .2s, transform .2s;
 }
 
-#searchBar input:not(:placeholder-shown) ~ span {
+#searchBar input:not(:placeholder-shown) ~ button {
     opacity: 1;
-    transform: translate(-150%, -52%) rotate(0deg) scale(1);
+    transform: translate(-1.75ch, -50%) rotate(0deg) scale(1);
 }
 
 #menuOpener {
@@ -257,7 +318,7 @@ main {
 }
 
 #menuOpener:focus {
-    background: hsl(210deg 10% 30%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
 }
 
 #menuOpener div {
@@ -276,7 +337,7 @@ main {
     bottom: 0;
     left: 0;
     width: 260px;
-    background: hsl(210deg 10% 20%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 20%));
     z-index: 2;
     display: grid;
     grid-template-rows: 150px 1fr 75px;
@@ -290,7 +351,7 @@ main {
 }
 
 #ownProfile {
-    background: hsl(210deg 20% 30%);
+    background: hsl(210deg calc(var(--colorIntensity) + 20%) calc(var(--brightness) + 30%));
     background-image: linear-gradient(0deg, hsl(0deg 0% 0% / 50%), hsl(0deg 0% 0% / 10%)), var(--profilePicture);
     background-size: cover;
     background-position: center 39%;
@@ -300,17 +361,19 @@ main {
     width: 260px;
     box-sizing: border-box;
     overflow: hidden;
+    position: relative;
 }
-#ownUserName:empty::before{
-    content:"loading...";
+
+#ownUserName:empty::before {
+    content: "loading...";
 }
 
 #sideMenuFooter {
-    background: hsl(210deg 10% 25%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 25%));
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-    color: hsl(210deg 10% 70%);
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 70%));
 }
 
 #sideMenuFooter span:first-of-type {
@@ -343,7 +406,7 @@ main {
 #sideMenuActions button {
     background: transparent;
     border: 0;
-    color: white;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
     display: grid;
     grid-template-columns: 24px 1fr;
     grid-gap: 15px;
@@ -365,7 +428,7 @@ main {
 }
 
 #sideMenuActions button:hover {
-    background: hsl(210deg 10% 30%);
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
 }
 
 #ownProfile button {
@@ -377,14 +440,143 @@ main {
 
 #ownProfile div > span {
     font-size: 1.8em;
-    color: white;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
 }
 
 #ownProfile button > span {
-    color: hsl(210deg 10% 60%);
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
 }
 
 #ownProfile div {
     display: flex;
     place-items: flex-end;
+}
+
+#contactInformation {
+    display: grid;
+    grid-row: 1;
+    grid-template-rows: 60% 1fr;
+    grid-template-columns: 52px 1fr 52px 52px;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
+}
+
+#contactInformation .chatTitle {
+    grid-row: 1;
+    grid-column: 2;
+    font-weight: bold;
+    display: flex;
+    align-items: flex-end;
+}
+
+#contactInformation .lastSeen {
+    grid-row: 2;
+    grid-column: 2;
+    color: hsl(0deg 0% 70%);
+    font-size: .8em;
+    align-items: flex-start;
+}
+
+#contactInformation button {
+    grid-row: 1/3;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
+    opacity: .5;
+    cursor: pointer;
+    margin: 6px;
+    transition: background .2s, opacity .2s;
+    border-radius: 100%;
+}
+
+#contactInformation .lastSeen::before {
+    content: "last seen ";
+    color: hsl(0deg 0% 55%);
+}
+
+#contactInformation .material-icons {
+    display: flex;
+    justify-content: center;
+}
+
+#contactInformation button:hover {
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
+    opacity: 1;
+}
+
+#messageContainer:empty:not(#messageView.loading div) ~ #contactInformation,
+#messageContainer:empty:not(#messageView.loading div) ~ #messageActionArea {
+    display: none;
+}
+
+#messageActionArea button {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    margin: 3px;
+    border-radius: 100%;
+    transition: background .2s, opacity .2s;
+    opacity: .5;
+}
+
+#messageActionArea .material-icons {
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
+    display: flex;
+    place-content: center;
+}
+
+#messageActionArea button:hover {
+    opacity: 1;
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
+}
+
+button#toggleUI {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
+    display: block;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    height: auto;
+    width: auto;
+    margin: 12px;
+}
+
+#toggleUI span {
+    display: flex;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness))) !important;
+}
+
+
+
+textarea#messageContent {
+    resize: none;
+    background: transparent;
+    border: 0;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
+    display: flex;
+    justify-content: center;
+    font-family: 'openSans';
+    font-size: 0.8em;
+    padding-top: 1em;
+}
+
+.messageComment {
+    display: flex;
+    height: 20px;
+    padding: 0 10px;
+    place-self: center;
+    place-content: center;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
+    font-size: .8em;
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
+    border-radius: 10px;
+    margin: 10px;
+}
+
+.messageComment:first-child {
+    display: none;
 }

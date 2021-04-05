@@ -1,5 +1,6 @@
 const config = require("./config"),
     forge = require("node-forge"),
+    fs = require("fs"),
     got = require("got");
 
 
@@ -20,6 +21,7 @@ const request = async (action, params) => {
         }
     }
 };
+var chatDatabase = {};
 
 const aesDecrypt = (message, password) => {
     var [iv, numIterations, salt, encrypted] = message.split("$");
@@ -163,6 +165,10 @@ exports.getPublicKey = async user => {
     }
 }
 
+exports.getMessagesFromStorage = (chatid) => {
+    return Object.values(chatDatabase[chatid].messages);
+}
+
 exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
     let response = await request("getmessages", {
         chatid,
@@ -183,6 +189,7 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
 
 
             // verify sender
+            // doesn't work yet
             try {
                 let publickey = await exports.getPublicKey(sender);
                 let md = forge.md.sha1.create();
@@ -197,16 +204,24 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
             // parse content
             message = JSON.parse(content);
 
-            messages.push({
+            let messageData = {
                 message_id: i.message_id,
                 sender,
                 verified,
                 messageType,
                 message,
                 chat_id: i.chat_id,
+                direction: sender == config.get("credentials:username") ? "sent" : "recieved",
                 encryptionType: i.encryptionType,
                 timestamp: i.timestamp,
-            });
+            };
+            if (!chatDatabase[chatid]) chatDatabase[chatid] = {
+                title: undefined,
+                chatKey,
+                messages: {}
+            };
+            chatDatabase[chatid].messages[i.message_id] = messageData;
+            messages.push(messageData);
         }
         return messages;
     } else {
@@ -226,11 +241,13 @@ exports.getChats = async () => {
         for (var i in chatInformation) {
             let profilePicture = await exports.getProfilePicture(i);
             let messages = await exports.getMessages(chatInformation[i].chatId, chatInformation[i].chatKey, 1, 0, true);
-            console.log("messagelength", messages)
+            console.log("messagelength", messages);
             contacts.push({
                 username: i,
                 profilePicture,
-                lastMessage: messages[0]
+                lastMessage: messages[0],
+                chatid: chatInformation[i].chatId,
+                chatKey: chatInformation[i].chatKey
             })
         }
         return contacts;

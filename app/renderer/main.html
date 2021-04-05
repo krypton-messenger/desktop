@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' data:">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="main.css">
-    <script src="common.js"></script>
+    <script src="common.js" charset="utf-8"></script>
     <title>Krypton Beta</title>
 </head>
 
@@ -16,9 +16,13 @@
             <div id="ownProfile">
                 <div>
                     <span id="ownUserName"></span>
-                    <button><span class="material-icons">edit
-                        </span></button>
+                    <button>
+                        <span class="material-icons">edit</span>
+                    </button>
                 </div>
+                <button id="toggleUI" onclick="toggleTheme()">
+                    <span class="material-icons">brightness_high</span>
+                </button>
             </div>
             <div id="sideMenuActions">
 
@@ -44,19 +48,50 @@
                 <span>Beta Version</span>
             </div>
         </div>
-        <div id="searchBar"><button id="menuOpener" onclick="toggleSideMenu()">
+        <div id="searchBar">
+            <button id="menuOpener" onclick="toggleSideMenu()">
                 <div></div>
                 <div></div>
                 <div></div>
             </button>
-            <div id="searchInputContainer"><input type="text" placeholder="Search"><span>✕</span></div>
+            <div id="searchInputContainer">
+                <input type="text" placeholder="Search">
+                <button>
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
         </div>
         <div id="chatList"></div>
         <div id="messageView">
-            <div id="contactInformation"></div>
             <div id="messageContainer"></div>
-            <div id="messageActionArea"></div>
+            <div id="contactInformation">
+                <button onclick="deselectContacts()">
+                    <i class="material-icons">arrow_back</i>
+                </button>
+                <span class="chatTitle">chat_title</span>
+                <span class="lastSeen">just now</span>
+
+                <button>
+                    <i class="material-icons">search</i>
+                </button>
+                <button>
+                    <i class="material-icons">more_vert</i>
+                </button>
+            </div>
+            <div id="messageActionArea">
+
+                <button>
+                    <i class="material-icons">attach_file</i></button>
+                <textarea id="messageContent" placeholder="Write a message..."></textarea>
+                <button>
+                    <i class="material-icons">schedule</i>
+                </button>
+                <button>
+                    <i class="material-icons">send</i>
+                </button>
+            </div>
         </div>
+        <div id="toastBarContainer"></div>
     </main>
 
 
@@ -91,55 +126,118 @@
             }   
          */
         const createMessageElement = (data) => {
-            let date = new Date(data.timestamp);
+            return new Promise((resolve, reject) => {
 
-            let messageContainer = document.createElement("div");
-            messageContainer.classList.add("message", data.direction ?? Math.random() > .5 ? "sent" : "recieved");
-            messageContainer.dataset.timestampMinutes = date.getMinutes();
-            messageContainer.dataset.timestampHours = date.getHours();
 
-            let messageContent = document.createElement("div");
-            messageContent.classList.add("messageContent");
-            messageContainer.appendChild(messageContent);
+                let date = new Date(data.timestamp);
 
-            let contentParagraph = document.createElement("p");
-            contentParagraph.appendChild(markdownConverter(data.message.value));
-            messageContent.appendChild(contentParagraph);
+                let messageContainer = document.createElement("div");
+                messageContainer.dataset.messageId = data.message_id;
+                resolve(messageContainer);
 
-            return messageContainer
+                messageContainer.classList.add("message", data.direction ?? Math.random() > .5 ? "sent" : "recieved");
+                messageContainer.dataset.timestampMinutes = pad(date.getMinutes(), 2);
+                messageContainer.dataset.timestampHours = pad(date.getHours(), 2);
+                messageContainer.dataset.timestamp = date.getTime();
+                messageContainer.dataset.verified = data.verified;
+                messageContainer.classList.add(data.messageType ?? "text");
+
+                let messageContent = document.createElement("div");
+                messageContent.classList.add("messageContent");
+                messageContainer.appendChild(messageContent);
+
+                switch (data.messageType) {
+                    case "file":
+
+                        let [title, fileId, rawSize, encryptedSize, mimeType] = data.message.value.split(":");
+
+                        let contentElement = document.createElement("div");
+                        contentElement.classList.add("file");
+                        contentElement.dataset.title = title;
+                        contentElement.dataset.fileId = fileId;
+                        contentElement.dataset.rawSize = rawSize;
+                        contentElement.dataset.encryptedSize = encryptedSize;
+                        contentElement.dataset.mimeType = mimeType;
+
+                        let fileTitle = document.createElement("span");
+                        fileTitle.classList.add("fileTitle");
+                        fileTitle.appendChild(document.createTextNode(title));
+                        contentElement.appendChild(fileTitle);
+
+
+                        let fileSize = document.createElement("span");
+                        fileSize.classList.add("fileSize");
+                        fileSize.appendChild(document.createTextNode(formatBytes(rawSize)));
+                        contentElement.appendChild(fileSize);
+
+
+                        messageContent.appendChild(contentElement);
+
+                        break;
+                    default:
+                        let contentParagraph = document.createElement("p");
+                        contentParagraph.appendChild(markdownConverter(data.message.value));
+                        messageContent.appendChild(contentParagraph);
+                        break;
+
+                }
+
+            });
 
         }
 
         const createChatTile = (data) => {
-            document.getElementById("messageContainer").appendChild(createMessageElement(data.lastMessage));
-            console.log(data.lastMessage);
             let date = new Date(data.lastMessage.timestamp)
 
-            let contactContainer = document.createElement("div");
-            contactContainer.classList.add("contactContainer");
-            contactContainer.dataset.lastMessageTime = date.getTime();
+            let chatContainer = document.createElement("div");
+            chatContainer.classList.add("chatContainer");
+            chatContainer.dataset.lastMessageTime = date.getTime();
+            chatContainer.dataset.chatid = data.lastMessage.chat_id;
+            chatContainer.onclick = (e) => {
+                deselectContacts(true);
+                chatContainer.classList.add("selected");
+                window.ipc.send('getmessages', {
+                    chatid: data.chatid,
+                    chatKey: data.chatKey,
+                    offset: 0
+                });
+            };
 
             let profilePicture = document.createElement("div");
             profilePicture.classList.add("profilePicture");
             if (data.profilePicture) profilePicture.style.setProperty("--profilePicture", "url(" + data.profilePicture + ")");
-            contactContainer.appendChild(profilePicture);
+            chatContainer.appendChild(profilePicture);
 
             let contactName = document.createElement("span");
             contactName.classList.add("contactName");
             contactName.appendChild(document.createTextNode(data.username));
-            contactContainer.appendChild(contactName);
+            chatContainer.appendChild(contactName);
 
             let messagePreview = document.createElement("span");
             messagePreview.classList.add("messagePreview");
-            messagePreview.appendChild(document.createTextNode(data.lastMessage.message.value));
-            contactContainer.appendChild(messagePreview);
+            switch (data.lastMessage.messageType) {
+                case "file":
+                    let attachFileSpan = document.createElement("span");
+                    attachFileSpan.innerHTML = "attach_file";
+                    attachFileSpan.classList.add("material-icons");
+                    messagePreview.appendChild(attachFileSpan);
+
+                    let fileName = document.createElement("span");
+                    fileName.appendChild(document.createTextNode(data.lastMessage.message.value.split(":")[0]))
+                    messagePreview.appendChild(fileName);
+                    break;
+                default:
+                    messagePreview.appendChild(document.createTextNode(data.lastMessage.message.value));
+                    break;
+            }
+            chatContainer.appendChild(messagePreview);
 
             let messageTime = document.createElement("span");
             messageTime.classList.add("messageTime");
             messageTime.appendChild(document.createTextNode(date.getHours, date.getMinutes));
-            contactContainer.appendChild(messagePreview);
+            chatContainer.appendChild(messagePreview);
 
-            return contactContainer
+            return chatContainer
         }
 
         const sortChatTiles = target => {
@@ -149,6 +247,26 @@
                 target.appendChild(i);
             }
         }
+        const sortMessageElements = target => {
+            for (var i of [].slice.call(target.childNodes).sort((a, b) => {
+                    return b.dataset.timestamp - a.dataset.timestamp
+                })) {
+                target.appendChild(i);
+            }
+        }
+        const deselectContacts = (loading) => {
+            document.querySelectorAll(".selected.chatContainer").forEach((elmt) => {
+                elmt.classList.remove("selected");
+            });
+            if(loading){
+                document.getElementById("messageView").classList.add("loading");
+            }else{
+                document.getElementById("messageView").classList.remove("loading");
+            }
+            document.getElementById("messageView").classList.remove("hasMessages");
+            document.getElementById("messageContainer").innerHTML = "";
+        }
+
 
         window.ipc.send('chatList', {
             request: true
@@ -158,12 +276,57 @@
             request: true
         });
 
+        const showToast = (msg, opts) => {
+            document.getElementById("toastBarContainer").appendChild(createToast(msg, opts));
+        }
 
+        window.ipc.listen(async (e, response) => {
 
-        window.ipc.listen((e, response) => {
             switch (response.trigger) {
+                case "getmessages":
+                    console.log("recieved message list");
+                    if (!response.success) {
+                        showToast(response.error.description, {
+                            actions: [{
+                                text: "Retry",
+                                callback: () => {
+                                    window.ipc.send('chatList', {
+                                        request: true
+                                    });
+                                }
+                            }]
+                        });
+                        return
+                    }
+                    document.getElementById("messageContainer").classList.remove("loading");
+                    var messageComment = document.createElement("div");
+                    messageComment.innerHTML="March 12";
+                    messageComment.classList.add("messageComment");
+                    for (var i of response.data) {
+                        if(Math.random()>.8)document.getElementById("messageContainer").appendChild(messageComment.cloneNode(true));
+                        if (!document.querySelector('[data-message-id="' + i.message_id + '"]') && i.chat_id == document.querySelector(".selected.chatContainer").dataset.chatid) document.getElementById("messageContainer").appendChild(await createMessageElement(i));
+                    }
+
+                    document.getElementById("messageView").classList.remove("loading");
+                    document.getElementById("messageView").classList.add("hasMessages");
+                    sortMessageElements(document.getElementById("messageContainer"));
+                    break;
+
                 case "chatList":
                     console.log("recieved contact list");
+                    if (!response.success) {
+                        showToast(response.error.description, {
+                            actions: [{
+                                text: "Retry",
+                                callback: () => {
+                                    window.ipc.send('chatList', {
+                                        request: true
+                                    });
+                                }
+                            }]
+                        });
+                        return
+                    }
                     for (var i of response.data) {
                         document.getElementById("chatList").appendChild(createChatTile(i));
                     }
@@ -172,10 +335,27 @@
 
                 case "ownProfile":
                     console.log("recieved profile information");
+                    if (!response.success) {
+                        showToast(response.error.description, {
+                            actions: [{
+                                text: "Retry",
+                                callback: () => {
+                                    window.ipc.send('ownProfile', {
+                                        request: true
+                                    });
+                                }
+                            }]
+                        });
+                        return
+                    }
                     document.getElementById("ownUserName").appendChild(document.createTextNode("@" + response.data.username));
                     if (response.data.profilePictureURI) document.getElementById("ownProfile").style.setProperty("--profilePicture", "url(" + response.data.profilePictureURI + ")");
                     break;
+                default:
+                    showToast("Unknown action: " + response.trigger)
+                    break;
             }
+
         });
 
     </script>

@@ -123,6 +123,30 @@ ipcMain.on("message", async (event, arg) => {
             }
             break;
 
+        case "getmessages":
+            console.log("getting messages");
+            try {
+                event.reply("message", {
+                    trigger: arg.command,
+                    success: true,
+                    data: apiConnection.getMessagesFromStorage(arg.data.chatid)
+                });
+                   
+                
+                event.reply("message", {
+                    trigger: arg.command,
+                    success: true,
+                    data: await apiConnection.getMessages(arg.data.chatid, arg.data.chatKey, 50, arg.data.offset, true)
+                });
+            } catch (e) {
+                event.reply("message", {
+                    trigger: arg.command,
+                    success: false
+                });
+                console.log(["failed to get messages", e]);
+            }
+            break;
+
         case "toggleLoginView":
             console.log("switching login-view...");
             try {
