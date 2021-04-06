@@ -5,10 +5,16 @@
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="loginForm.css">
+    <script src="common.js" charset="utf-8"></script>
     <title>Krypton Beta</title>
 </head>
 
 <body>
+    <nav>
+        <button class="material-icons" onclick="minimizeWindow()">minimize</button>
+        <button class="material-icons" onclick="toggleMaximizeWindow()">crop_square</button>
+        <button class="material-icons" id="closeWindow" onclick="closeWindow()">close</button>
+    </nav>
     <main>
         <div class="login">
 

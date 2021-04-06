@@ -1,4 +1,5 @@
 @import "toast.css";
+@import "contextmenu.css";
 
 body {
     font-family: sans-serif;
@@ -142,5 +143,33 @@ a {
 }
 
 body {
-    background-color: hsl(210deg 10% 10%);
+    background-color: hsl(210deg 10% 20%);
+}
+
+nav {
+    -webkit-app-region: drag;
+    height: 20px;
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
+    user-select: none;
+    display: flex;
+    justify-content: flex-end;
+}
+
+nav button {
+    -webkit-app-region: no-drag;
+    background: none;
+    border: none;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
+    align-self: center;
+    padding: 5px;
+    font-size: 0.9em !important;
+    font-weight: bolder ! important;
+}
+
+nav button:hover {
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 40%));
+}
+
+nav button#closeWindow:hover {
+    background: hsl(0deg calc(var(--colorIntensity) + 40%) calc(var(--brightness) + 40%));
 }

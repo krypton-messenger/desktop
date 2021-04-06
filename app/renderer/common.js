@@ -58,7 +58,51 @@ const createToast = (message, options) => {
     //</div>
 }
 
-const toggleTheme=()=>{
+// contextMenu
+
+window.addEventListener("contextmenu", (e) => {
+    createContextMenu(e)
+});
+window.addEventListener("scroll", (e) => {
+    if (!e.target.classList.contains("contextMenu")) removeAllContextMenus();
+}, true)
+const removeAllContextMenus = () => {
+    for (var i of document.querySelectorAll(".contextMenu")) {
+        i.parentElement.removeChild(i);
+    }
+}
+
+const createContextMenu = (e, items) => {
+    removeAllContextMenus();
+    let contextMenu = document.createElement("div");
+    contextMenu.style.setProperty("--x", e.x);
+    contextMenu.style.setProperty("--y", e.y);
+    contextMenu.classList.add("contextMenu");
+
+    for (var i of items ?? [{
+            label: "lorem ipsum",
+            callback: console.log
+        }]) {
+        let entry = document.createElement("button");
+        entry.classList.add("entry");
+        entry.onclick = (e) => {
+            removeAllContextMenus();
+            i.callback(e, ...i.args ?? []);
+        };
+        entry.appendChild(document.createTextNode(i.label));
+
+        contextMenu.appendChild(entry);
+    }
+    document.body.appendChild(contextMenu);
+    contextMenu.style.setProperty("--height", contextMenu.clientHeight + "px");
+
+
+    window.addEventListener("click", (e) => {
+        if (!e.target.classList.contains("contextMenu")) removeAllContextMenus();
+    })
+}
+
+const toggleTheme = () => {
     document.querySelector(':root').classList.toggle('light');
 }
 
@@ -149,4 +193,19 @@ const formatBytes = (a, b = 2) => {
     const c = 0 > b ? 0 : b,
         d = Math.floor(Math.log(a) / Math.log(1024));
     return parseFloat((a / Math.pow(1024, d)).toFixed(c)) + " " + ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"][d]
+}
+
+
+const minimizeWindow = () => {
+    window.ipc.send("windowStateChange", "minimize");
+}
+const toggleMaximizeWindow = () => {
+    window.ipc.send("windowStateChange", "toggleMaximize");
+}
+const closeWindow = () => {
+    window.ipc.send("windowStateChange", "close");
+}
+const debugMode = (e) => {
+    console.log(e);
+    window.ipc.send("windowStateChange", "openDebug");
 }

@@ -12,8 +12,6 @@ const {
     config = require("./app/config"),
     apiConnection = require("./app/apiConnection");
 
-var dev = false;
-dev = true;
 
 const containingFile = () => {
     console.log("loginstate: ", config.get("signedIn"));
@@ -23,26 +21,26 @@ const containingFile = () => {
 var win;
 
 function createWindow() {
-
+    var configSize = config.get("windowSize") ?? [800, 600];
     win = new BrowserWindow({
-        minWidth: 400,
+        minWidth: 300,
         minHeight: 500,
-        width: 800,
-        height: 600,
+        width: configSize[0],
+        height: configSize[1],
+        frame: false,
         webPreferences: {
             preload: path.join(__dirname, "app/renderer/preload.js"),
         }
     });
 
+    win.setMenuBarVisibility(true);
     win.setMenu(new Menu());
     win.setIcon(nativeImage.createFromPath("app/icon.png"));
     win.loadFile(containingFile());
 
-    if (dev) win.on("resize", () => {
-        console.log(win.getSize())
+    win.on("resize", () => {
+        config.setAndSave("windowSize", win.getSize());
     });
-    if (dev) win.webContents.openDevTools();
-
 }
 
 app.on("ready", createWindow);
@@ -60,6 +58,27 @@ app.on("activate", () => {
 ipcMain.on("message", async (event, arg) => {
     console.log(arg);
     switch (arg.command) {
+        case "windowStateChange":
+            switch (arg.data) {
+                case "minimize":
+                    win.minimize();
+                    break;
+                case "toggleMaximize":
+                    if (win.isMaximized()) win.unmaximize()
+                    else win.maximize();
+                    break;
+                case "close":
+                    win.close();
+                    break;
+                case "openDebug":
+                    win.webContents.openDevTools();
+                    break;
+                default:
+                    console.log("unknown operation:" + arg.data);
+                    break;
+            }
+            break;
+
         case "login":
             console.log("logging in...");
             try {
@@ -131,8 +150,8 @@ ipcMain.on("message", async (event, arg) => {
                     success: true,
                     data: apiConnection.getMessagesFromStorage(arg.data.chatid)
                 });
-                   
-                
+
+
                 event.reply("message", {
                     trigger: arg.command,
                     success: true,
@@ -184,7 +203,7 @@ ipcMain.on("message", async (event, arg) => {
         case "chatList":
             try {
                 var contacts = await apiConnection.getChats();
-                console.log("contacts:",contacts);
+                console.log("contacts:", contacts);
                 event.reply("message", {
                     trigger: arg.command,
                     success: true,

@@ -10,6 +10,11 @@
 </head>
 
 <body>
+    <nav>
+        <button class="material-icons" onclick="minimizeWindow()">minimize</button>
+        <button class="material-icons" onclick="toggleMaximizeWindow()">crop_square</button>
+        <button class="material-icons" id="closeWindow" onclick="closeWindow()">close</button>
+    </nav>
     <main>
         <div id="sideMenu">
             <div id="sideMenuFocuser" onclick="toggleSideMenu()"></div>
@@ -42,26 +47,18 @@
                     <span class="material-icons">logout</span>
                     Sign Out
                 </button>
+                <button onclick="debugMode()">
+                    <span class="material-icons">code</span>Debug
+                </button>
             </div>
             <div id="sideMenuFooter">
                 <span>Krypton Desktop</span>
                 <span>Beta Version</span>
             </div>
         </div>
-        <div id="searchBar">
-            <button id="menuOpener" onclick="toggleSideMenu()">
-                <div></div>
-                <div></div>
-                <div></div>
-            </button>
-            <div id="searchInputContainer">
-                <input type="text" placeholder="Search">
-                <button>
-                    <span class="material-icons">close</span>
-                </button>
-            </div>
-        </div>
-        <div id="chatList"></div>
+
+
+
         <div id="messageView">
             <div id="messageContainer"></div>
             <div id="contactInformation">
@@ -91,7 +88,26 @@
                 </button>
             </div>
         </div>
+
+        <div id="chatView">
+            <div id="searchBar">
+                <button id="menuOpener" onclick="toggleSideMenu()">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </button>
+                <div id="searchInputContainer">
+                    <input type="text" placeholder="Search">
+                    <button>
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            </div>
+            <div id="chatList"></div>
+        </div>
+
         <div id="toastBarContainer"></div>
+
     </main>
 
 
@@ -258,9 +274,9 @@
             document.querySelectorAll(".selected.chatContainer").forEach((elmt) => {
                 elmt.classList.remove("selected");
             });
-            if(loading){
+            if (loading) {
                 document.getElementById("messageView").classList.add("loading");
-            }else{
+            } else {
                 document.getElementById("messageView").classList.remove("loading");
             }
             document.getElementById("messageView").classList.remove("hasMessages");
@@ -300,10 +316,10 @@
                     }
                     document.getElementById("messageContainer").classList.remove("loading");
                     var messageComment = document.createElement("div");
-                    messageComment.innerHTML="March 12";
+                    messageComment.innerHTML = "March 12";
                     messageComment.classList.add("messageComment");
                     for (var i of response.data) {
-                        if(Math.random()>.8)document.getElementById("messageContainer").appendChild(messageComment.cloneNode(true));
+                        if (Math.random() > .8) document.getElementById("messageContainer").appendChild(messageComment.cloneNode(true));
                         if (!document.querySelector('[data-message-id="' + i.message_id + '"]') && i.chat_id == document.querySelector(".selected.chatContainer").dataset.chatid) document.getElementById("messageContainer").appendChild(await createMessageElement(i));
                     }
 
