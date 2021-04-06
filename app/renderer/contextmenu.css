@@ -1,13 +1,16 @@
 .contextMenu {
+    --screenMargin: 6px;
+    --width: min(200px, 80%);
     --height: 80vh;
+    z-index: 5;
     position: absolute;
-    top: min(max(calc(var(--y) * 1px), 0px), calc(100vh - 12px - var(--height)));
-    left: min(max(calc(var(--x) * 1px), 0px), calc(100vw - min(200px, 80%)));
+    top: min(max(calc(var(--y) * 1px), var(--screenMargin)), calc(100vh - var(--screenMargin) - var(--height)));
+    left: min(max(calc(var(--x) * 1px), var(--screenMargin)), calc(100vw - var(--screenMargin) - var(--width)));
     display: grid;
     background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 20%));
     padding: 6px 0;
     border-radius: 3px;
-    min-width: min(200px, 80%);
+    min-width: var(--width);
     max-width: 80%;
     box-shadow: 0px 0px 5px 0px hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 10%));
     max-height: var(--height);
@@ -21,15 +24,18 @@
     transition: background .2s;
     cursor: pointer;
     padding: 8px 20px;
-    text-align:left;
-    font-weight:lighter;
-    font-size:.8em;
+    text-align: left;
+    font-weight: lighter;
+    font-size: .8em;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow-x: hidden;
 }
 
-.contextMenu button.entry:hover {
+.contextMenu button.entry:not([disabled]):hover {
     background: hsl(210deg calc(var(--colorIntensity) + 20%) calc(var(--brightness) + 30%));
 }
 
+.contextMenu button.entry[disabled] {
+    opacity: .5;
+}
