@@ -81,4 +81,24 @@ div#toastBarContainer:empty {
 .toast:first-of-type:not(.removing) {
     filter: none !important;
     transform: none !important;
+    position: relative;
+}
+
+
+.timed.toast::after {
+    content: "";
+    position: absolute;
+    width: 0%;
+    transition: width calc(var(--timeout) * 1ms) linear;
+    max-width: 100%;
+    bottom: 0;
+    border: 1px solid hsl(210deg calc(var(--colorIntensity) + 30%) calc(var(--brightness) + 50%));
+    border-bottom-left-radius: 3px;
+    box-sizing: border-box;
+    border-bottom-right-radius: 3px;
+    --timeout: inherit;
+    left: 0;
+}
+.timed.toast.timerStarted::after{
+    width: 100%;
 }

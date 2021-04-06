@@ -67,9 +67,8 @@
                 <button onclick="new ChatTile().deselectAll()">
                     <i class="material-icons">arrow_back</i>
                 </button>
-                <span class="chatTitle">chat_title</span>
-                <span class="lastSeen">just now</span>
-
+                <span class="chatTitle" id="chatTitle"></span>
+                <span class="chatInfo"></span>
                 <button>
                     <i class="material-icons">search</i>
                 </button>
@@ -93,11 +92,7 @@
 
         <div id="chatView">
             <div id="searchBar">
-                <button id="menuOpener" onclick="toggleSideMenu()">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                </button>
+                <button id="menuOpener" onclick="toggleSideMenu()" class="material-icons">menu</button>
                 <div id="searchInputContainer">
                     <input type="text" placeholder="Search">
                     <button>
@@ -129,7 +124,7 @@
                 target.appendChild(i);
             }
         }
-        
+
         window.ipc.send('chatList', {
             request: true
         });
@@ -138,9 +133,6 @@
             request: true
         });
 
-        const showToast = (msg, opts) => {
-            document.getElementById("toastBarContainer").appendChild(createToast(msg, opts));
-        }
 
         window.ipc.listen(async (e, response) => {
 
@@ -148,7 +140,7 @@
                 case "getmessages":
                     console.log("recieved message list");
                     if (!response.success) {
-                        showToast(response.error.description, {
+                        new Toast(response.error.description, {
                             actions: [{
                                 text: "Retry",
                                 callback: () => {
@@ -164,10 +156,8 @@
                     var messageComment = document.createElement("div");
                     messageComment.innerHTML = "March 12";
                     messageComment.classList.add("messageComment");
-                    console.log(response.data);
                     for (var i of response.data) {
                         if (Math.random() > .8) document.getElementById("messageContainer").appendChild(messageComment.cloneNode(true));
-                        console.log("messageElement;", new MessageElement(i));
                         if (!document.querySelector('[data-message-id="' + i.message_id + '"]') && i.chat_id == document.querySelector(".selected.chatContainer").dataset.chatid) document.getElementById("messageContainer").appendChild(new MessageElement(i).container);
                     }
 
@@ -179,7 +169,7 @@
                 case "chatList":
                     console.log("recieved contact list");
                     if (!response.success) {
-                        showToast(response.error.description, {
+                        new Toast(response.error.description, {
                             actions: [{
                                 text: "Retry",
                                 callback: () => {
@@ -201,7 +191,7 @@
                 case "ownProfile":
                     console.log("recieved profile information");
                     if (!response.success) {
-                        showToast(response.error.description, {
+                        new Toast(response.error.description, {
                             actions: [{
                                 text: "Retry",
                                 callback: () => {
@@ -217,7 +207,7 @@
                     if (response.data.profilePictureURI) document.getElementById("ownProfile").style.setProperty("--profilePicture", "url(" + response.data.profilePictureURI + ")");
                     break;
                 default:
-                    showToast("Unknown action: " + response.trigger)
+                    new Toast("Unknown action: " + response.trigger)
                     break;
             }
 

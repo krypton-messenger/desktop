@@ -1,3 +1,8 @@
+textarea::-webkit-scrollbar {
+    background: transparent;
+    width: .4em;
+}
+
 ::-webkit-scrollbar {
     width: .5em;
     height: .5em;
@@ -6,7 +11,6 @@
 
 ::-webkit-scrollbar-thumb {
     background-color: hsl(210deg calc(var(--colorIntensity) + 5%) calc(var(--brightness) + 30%));
-    border-radius: .25em;
 }
 
 ::-webkit-scrollbar-corner {
@@ -49,7 +53,6 @@ main {
     }
 }
 
-
 #messageView {
     display: grid;
     grid-template-rows: 52px 1fr 45px;
@@ -62,7 +65,6 @@ main {
     user-select: none;
 }
 
-
 #messageActionArea {
     background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 20%));
     user-select: none;
@@ -70,7 +72,6 @@ main {
     grid-template-columns: 45px 1fr 45px 45px;
     color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
 }
-
 
 .message {
     border-radius: 5px;
@@ -117,8 +118,7 @@ main {
     transform: translate(100%, 0);
 }
 
-.recieved.message::before,
-.sent.message::before {
+.recieved.message::before, .sent.message::before {
     content: "";
     border-width: 7px;
     border-style: solid;
@@ -126,7 +126,6 @@ main {
     border-radius: 0;
     position: absolute;
 }
-
 
 #messageContainer {
     background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 10%));
@@ -191,7 +190,6 @@ span.fileSize {
     font-weight: lighter;
     font-size: 0.8em;
 }
-
 
 .file.message {
     cursor: pointer;
@@ -314,24 +312,20 @@ span.fileSize {
     height: var(--size);
     width: var(--size);
     outline: none;
-    display: grid;
-    padding: 8px;
-    align-items: stretch;
+    display: flex;
+    justify-content: center;
     cursor: pointer;
+    align-items: center;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
+    transition: color .2s;
 }
 
-#menuOpener:hover div {
-    background: hsl(0deg 0% 70%);
+#menuOpener:hover {
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(70% - var(--brightness)));
 }
 
 #menuOpener:focus {
     background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
-}
-
-#menuOpener div {
-    background: hsl(0deg 0% 50%);
-    margin: 12% 0;
-    border-radius: 1px;
 }
 
 #sideMenu.open {
@@ -475,10 +469,10 @@ span.fileSize {
     align-items: flex-end;
 }
 
-#contactInformation .lastSeen {
+#contactInformation .chatInfo {
     grid-row: 2;
     grid-column: 2;
-    color: hsl(0deg 0% 70%);
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(70% - var(--brightness)));
     font-size: .8em;
     align-items: flex-start;
 }
@@ -496,7 +490,11 @@ span.fileSize {
     border-radius: 100%;
 }
 
-#contactInformation .lastSeen::before {
+#contactInformation .chatInfo:empty::before {
+    content: "click here for chat info";
+}
+
+#contactInformation .chatInfo.lastSeen:not(:empty)::before {
     content: "last seen ";
     color: hsl(0deg 0% 55%);
 }
@@ -511,8 +509,7 @@ span.fileSize {
     opacity: 1;
 }
 
-#messageContainer:empty:not(#messageView.loading div) ~ #contactInformation,
-#messageContainer:empty:not(#messageView.loading div) ~ #messageActionArea {
+#messageContainer:empty:not(#messageView.loading div) ~ #contactInformation, #messageContainer:empty:not(#messageView.loading div) ~ #messageActionArea {
     display: none;
 }
 
@@ -556,8 +553,6 @@ button#toggleUI {
     display: flex;
     color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness))) !important;
 }
-
-
 
 textarea#messageContent {
     resize: none;

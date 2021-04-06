@@ -15,6 +15,8 @@ class ChatTile {
                     chatKey: data.chatKey,
                     offset: 0
                 });
+                document.getElementById("chatTitle").innerHTML = "";
+                document.getElementById("chatTitle").appendChild(document.createTextNode(this.chatName));
             };
 
             this.profilePictureURI = data.profilePicture;
@@ -32,10 +34,14 @@ class ChatTile {
     }
 
     set chatName(value) {
+        this._chatName = value;
         this.chatNameElement = document.createElement("span");
         this.chatNameElement.classList.add("contactName");
         this.chatNameElement.appendChild(document.createTextNode(value));
         this.container.appendChild(this.chatNameElement);
+    }
+    get chatName() {
+        return this._chatName;
     }
 
     set profilePictureURI(value) {
@@ -112,6 +118,30 @@ class MessageElement {
         this.container.dataset.messageId = data.message_id;
 
         this.container.classList.add("message", data.direction ?? "unknownDirection");
+        this.container.addEventListener("contextmenu",
+            (e) => {
+                new ContextMenu(e, [{
+                    label: "Reply",
+                    callback: console.log,
+                    disabled: true
+                }, {
+                    label: "Copy Text",
+                    callback: (e, value) => {
+                        console.log("copy text");
+                        navigator.clipboard.writeText(value).then(() => {
+                            new Toast("Text copied to tlipboard", {
+                                timer: 1000
+                            });
+                        });
+                    },
+                    args: [this.data.message.value],
+                    disabled: false
+                }, {
+                    label: "Message information",
+                    callback: console.log,
+                    disabled: true
+                }]);
+            });
         this.container.dataset.timestampMinutes = this.pad(this.date.getMinutes(), 2);
         this.container.dataset.timestampHours = this.pad(this.date.getHours(), 2);
         this.container.dataset.timestamp = this.date.getTime();
@@ -189,6 +219,123 @@ class MessageElement {
     }
 };
 
-const ContextMenu = () => {
-    console.log("ContextMenu");
-};
+class ContextMenu {
+    constructor(e, items) {
+        this.removeAllContextMenus();
+        window.addEventListener("scroll", (e) => {
+            if (!e.target.classList.contains("contextMenu")) this.removeAllContextMenus();
+        }, true, {
+            once: true
+        });
+        this.container = document.createElement("div");
+        this.container.style.setProperty("--x", e.x);
+        this.container.style.setProperty("--y", e.y);
+        this.container.classList.add("contextMenu");
+
+        this.items = items ?? [{
+            label: "lorem ipsum",
+            callback: console.log,
+            disabled: false,
+        }, {
+            label: "lorem ipsum 2",
+            callback: console.log,
+            disabled: true,
+        }, {
+            label: "lorem ipsum 3",
+            callback: console.log,
+            disabled: false,
+        }];
+        for (let i of this.items) {
+            i.elmt = document.createElement("button");
+            i.elmt.classList.add("entry");
+            i.elmt.onclick = (e) => {
+                this.removeAllContextMenus();
+                console.log("running callback of i:", i);
+                i.callback(e, ...i.args ?? []);
+            };
+            if (i.disabled) i.elmt.setAttribute("disabled", "true");
+            i.elmt.appendChild(document.createTextNode(i.label));
+
+            this.container.appendChild(i.elmt);
+        }
+        document.body.appendChild(this.container);
+        this.container.style.setProperty("--height", this.container.clientHeight + "px");
+
+
+        window.addEventListener("click", (e) => {
+            if (!e.target.classList.contains("contextMenu")) this.removeAllContextMenus();
+        })
+    }
+    removeAllContextMenus() {
+        for (var i of document.querySelectorAll(".contextMenu")) {
+            i.parentElement.removeChild(i);
+        }
+    }
+}
+
+
+// toast
+class Toast {
+    constructor(message, options) {
+        this.options = options ?? {};
+        let actionOpts = this.options.actions ?? [];
+
+        let closeOpts = this.options.close ?? {
+            show: true,
+            callback: false
+        };
+
+        let timerOpts = this.options.timer ?? false;
+
+        let toast = document.createElement("div");
+        toast.classList.add("toast");
+
+        let toastMessage = document.createElement("span");
+        toastMessage.classList.add("toastMessage");
+        toastMessage.appendChild(document.createTextNode(message));
+        toast.appendChild(toastMessage);
+
+        for (var i of actionOpts) {
+            let toastAction = document.createElement("button");
+            toastAction.classList.add("toastAction");
+            toastAction.appendChild(document.createTextNode(i.text));
+            toastAction.onclick = (e) => {
+                e.target.parentElement.classList.add("removing");
+                setTimeout(() => {
+                    e.target.parentElement.parentElement.removeChild(e.target.parentElement);
+                }, 200);
+                i.callback(e);
+            };
+            toast.appendChild(toastAction);
+        }
+        if (closeOpts.show) {
+            console.log("showing");
+            this.closeBtn = document.createElement("button");
+            this.closeBtn.classList.add("close");
+            if (closeOpts.callback) {
+                this.closeBtn.onclick = closeOpts.callback;
+            } else {
+                this.closeBtn.onclick = (e) => {
+                    e.target.parentElement.classList.add("removing");
+                    setTimeout(() => {
+                        e.target.parentElement.parentElement.removeChild(e.target.parentElement);
+                    }, 200);
+                }
+            }
+            this.closeBtn.appendChild(document.createTextNode("close"));
+            toast.appendChild(this.closeBtn);
+        }
+        document.getElementById("toastBarContainer").appendChild(toast);
+
+        if (timerOpts) {
+            toast.classList.add("timed");
+            toast.style.setProperty("--timeout", timerOpts-200);
+            setTimeout(() => {
+                this.closeBtn.click();
+            }, timerOpts);
+            setTimeout(()=>{
+                toast.classList.add("timerStarted");
+            }, 200);
+        }
+    }
+}
