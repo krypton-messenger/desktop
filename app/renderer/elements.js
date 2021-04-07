@@ -138,8 +138,35 @@ class MessageElement {
                     disabled: false
                 }, {
                     label: "Message information",
-                    callback: console.log,
-                    disabled: true
+                    callback: (e, messageData) => {
+                        let tableData = Object.keys(messageData).map((key, index) => {
+                            return [key, Object.values(messageData)[index]]
+                        })
+                        let table = document.createElement("table");
+                        for (let i of tableData) {
+                            let tr = document.createElement("tr");
+                            for (let j of i) {
+                                let td = document.createElement("td");
+                                td.appendChild(document.createTextNode(j));
+                                td.classList.add("messageInformation_"+i[0]);
+                                td.dataset.value=j;
+                                tr.appendChild(td);
+                            }
+                            table.appendChild(tr);
+                        }
+
+                        new Popup(table, {
+                            cancel: false,
+                            okButton: {
+                                label: "Okay",
+                                callback: () => {
+                                    new Popup().remove(true)
+                                }
+                            }
+                        }).show();
+                    },
+                    args: [this.data],
+                    disabled: false
                 }]);
             });
         this.container.dataset.timestampMinutes = this.pad(this.date.getMinutes(), 2);
@@ -329,13 +356,88 @@ class Toast {
 
         if (timerOpts) {
             toast.classList.add("timed");
-            toast.style.setProperty("--timeout", timerOpts-200);
+            toast.style.setProperty("--timeout", timerOpts - 200);
             setTimeout(() => {
                 this.closeBtn.click();
             }, timerOpts);
-            setTimeout(()=>{
+            setTimeout(() => {
                 toast.classList.add("timerStarted");
             }, 200);
         }
     }
+}
+
+
+class Popup {
+    constructor(title, buttons) {
+        if (title) this.content = title;
+        if (buttons) this.buttons = buttons;
+    }
+    set content(value) {
+        this.container = document.createElement("div");
+        this.container.classList.add("popup");
+
+        this._content = {
+            text: value,
+            elmt: document.createElement("div")
+        }
+        this._content.elmt.classList.add("popupContent");
+        if (typeof (value) == "object") {
+            this._content.elmt.appendChild(value);
+        } else {
+            this._content.elmt.appendChild(document.createTextNode(value));
+
+        }
+        this.container.appendChild(this._content.elmt);
+    }
+    get content() {
+        return this._content.text;
+    }
+
+    set buttons(value) {
+        this.popupActions = document.createElement("div");
+        this.popupActions.classList.add("popupActions")
+        this.container.appendChild(this.popupActions);
+        this._buttons = {};
+
+        if (value.cancel) {
+            this._buttons.cancelButton = {
+                label: value.cancel.label ?? "cancel",
+                callback: value.cancel.callback ?? this.remove,
+                elmt: document.createElement("button")
+            };
+            this._buttons.cancelButton.elmt.appendChild(document.createTextNode(this._buttons.cancelButton.label));
+            this._buttons.cancelButton.elmt.onclick = this._buttons.cancelButton.callback;
+            this.popupActions.appendChild(this._buttons.cancelButton.elmt);
+        }
+
+        if (value.okButton) {
+            this._buttons.okButton = {
+                label: value.okButton.label,
+                callback: value.okButton.callback,
+                elmt: document.createElement("button")
+            }
+            this._buttons.okButton.elmt.appendChild(document.createTextNode(this._buttons.okButton.label));
+            this._buttons.okButton.elmt.classList.add("suggestedAction");
+            this._buttons.okButton.elmt.onclick = this._buttons.okButton.callback;
+            this.popupActions.appendChild(this._buttons.okButton.elmt);
+        }
+    }
+
+    get buttons() {
+        return this._buttons
+    }
+    remove(all) {
+        if (all) {
+            for (let i of document.querySelectorAll(".popup")) {
+                i.parentElement.removeChild(i);
+            }
+        } else {
+            this.container.parentElement.removeChild(this.container);
+        }
+    }
+    show() {
+        document.getElementById("popupContainer").appendChild(this.container);
+    }
+
 }

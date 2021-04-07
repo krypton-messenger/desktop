@@ -1,0 +1,105 @@
+.popup {
+    min-height: 250px;
+    min-width: 300px;
+    max-width: 80%;
+    max-height: 80%;
+    overflow: hidden;
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 20%));
+    box-shadow: 6px 6px 6px 0 hsl(210deg calc(var(--colorIntensity) + 10%) 0% / .5);
+    display: grid;
+    border-radius: 4px;
+    grid-template-rows: 1fr 45px;
+    grid-template-columns: 1fr;
+}
+
+#popupContainer:not(:empty) {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    background: rgb(0 0 0 / 40%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3;
+}
+
+.popupActions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 5px;
+}
+
+.popupActions button {
+    background: transparent;
+    padding: 7px 20px;
+    border: 0;
+    border-radius: 4px;
+    transition: background .2s, box-shadow .2s, color .2s;
+    margin: 5px;
+    cursor: pointer;
+    color: hsl(210deg calc(var(--colorIntensity) + 100%) calc(90% - var(--brightness)));
+    text-transform: uppercase;
+}
+
+.popupActions button:focus,
+.popupActions button:hover {
+    background: hsl(210deg calc(var(--colorIntensity) + 7.5%) calc(var(--brightness) + 30%));
+    box-shadow: 2px 2px 6px 0 hsl(210deg calc(var(--colorIntensity) + 7.5%) calc(var(--brightness) + 10%) / .8);
+}
+
+.popupActions button.suggestedAction {
+    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 40%));
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(90% - var(--brightness)));
+}
+
+.popupActions button.suggestedAction:hover,
+.popupActions button.suggestedAction:focus {
+    background: hsl(210deg calc(var(--colorIntensity) + 30%) calc(80% - var(--brightness)));
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 10%));
+}
+
+.popupContent {
+    padding: 30px;
+    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(90% - var(--brightness)));
+    word-break: break-word;
+    overflow: auto;
+}
+
+.popup td:first-child {
+    padding: 10px 0;
+}
+
+.popup td:first-child {
+    width: 150px;
+}
+
+.popup table {
+    border-collapse: collapse;
+}
+
+.popup tr:not(:last-child) {
+    border-bottom: 1px solid hsl(210deg calc(var(--colorIntensity) + 10%) calc(40% - var(--brightness)));
+}
+
+.popup td.messageInformation_encryptionType[data-value="RSA-AES_CBC"]:after {
+    content: "lock";
+    font-family: 'materialIcons';
+    padding: 8px;
+    font-size: 24px;
+    vertical-align: bottom;
+    color: hsl(133deg 50% 50% / 85%);
+}
+
+.popup td.messageInformation_verified[data-value="false"]:after {
+    content: "warning";
+    font-family: 'materialIcons';
+    padding: 8px;
+    font-size: 24px;
+    vertical-align: bottom;
+    color: hsl(0deg 50% 52%);
+}
+
+.popup td.messageInformation_chat_id:not([data-value="chat_id"]) {
+    font-family: monospace;
+}

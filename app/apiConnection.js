@@ -190,13 +190,16 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
 
             // verify sender
             // doesn't work yet
+            let verified;
+            console.log(signature);
+            console.log(content);
             try {
                 let publickey = await exports.getPublicKey(sender);
                 let md = forge.md.sha1.create();
                 md.update(content, 'utf8');
-                let verified;
-                verified = publickey.verify(md.digest().bytes(), signature);
+                verified = publickey.verify(md, signature);
             } catch (e) {
+                console.log("error while verifying:", e);
                 verified = false;
             }
 
