@@ -10,6 +10,7 @@
     <script src="elements.js" charset="utf-8"></script>
     <title>Krypton Beta</title>
 </head>
+
 <body>
     <nav>
         <button class="material-icons" onclick="minimizeWindow()">minimize</button>
@@ -19,7 +20,7 @@
     <main>
         <div id="sideMenu" class="">
             <div id="sideMenuFocuser" onclick="toggleSideMenu()"></div>
-            
+
             <div id="sideMenuActions">
 
                 <button onclick="noImplementation()">
@@ -45,9 +46,10 @@
             <div id="sideMenuFooter">
                 <span>Krypton Desktop</span>
                 <span>Beta Version</span>
-            <button id="toggleUI" onclick="toggleTheme()">
+                <button id="toggleUI" onclick="toggleTheme()">
                     <span class="material-icons">brightness_high</span>
-                </button></div>
+                </button>
+            </div>
         </div>
 
 
@@ -110,11 +112,12 @@
                     <button onclick="noImplementation()" id="clearSearchInput">
                         <span class="material-icons">close</span>
                     </button>
-                <button onclick="document.querySelector('#searchBar input').focus()" id="showSearchInput">
+                    <button onclick="document.querySelector('#searchBar input').focus()" id="showSearchInput">
                         <span class="material-icons">search</span>
-                    </button></div>
+                    </button>
+                </div>
             </div>
-            <div id="chatList"><div class="chatContainer" data-last-message-time="1617567603139" data-chatid="b643e2f7c5e40a4d988becf05418dd9a5f01e39d1bb5c3a880241bfd5357f824be78e6505428107e5bb86906455fd765fc977f8c16f7d83eaba6407e8efdfb15"><div class="profilePicture"></div><span class="contactName">tim</span><span class="messagePreview">0</span></div><div class="chatContainer" data-last-message-time="1617203144298" data-chatid="447104bebe6584b7f869de16afedb579289e000cf1bfe957fd1701c596da535b91d7e72f5b09ef15e14ff335d57f739418465c7ac4195347e7db8a87164bd239"><div class="profilePicture"></div><span class="contactName">admin</span><span class="messagePreview"><span class="material-icons">attach_file</span><span>flyer_p2.pdf</span></span></div></div>
+            <div id="chatList"></div>
         </div>
 
         <div id="toastBarContainer"></div>
@@ -177,7 +180,6 @@
                     messageComment.innerHTML = "March 12";
                     messageComment.classList.add("messageComment");
                     for (var i of response.data) {
-                        if (Math.random() > .8) document.getElementById("messageContainer").appendChild(messageComment.cloneNode(true));
                         if (!document.querySelector('[data-message-id="' + i.message_id + '"]') && i.chat_id == document.querySelector(".selected.chatContainer").dataset.chatid) document.getElementById("messageContainer").appendChild(new MessageElement(i).container);
                     }
 
@@ -207,6 +209,7 @@
                     for (var i of response.data) {
                         let chatTile = new ChatTile(i);
                         document.getElementById("chatList").appendChild(chatTile.container);
+                        console.log("appended Chattile");
                         chatTile.sortChatTiles();
                     }
                     break;
@@ -241,4 +244,5 @@
 
 
 </body>
+
 </html>

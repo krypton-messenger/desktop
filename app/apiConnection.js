@@ -5,6 +5,7 @@ const config = require("./config"),
 
 
 const request = async (action, params) => {
+    console.log(`requesting ${action}`);
     try {
         return await got.post(action, {
             prefixUrl: config.get("server"),
@@ -155,15 +156,23 @@ exports.createAccount = (serverurl, username, password, licenceKey, guest) => {
     });
 };
 
+var cache = {};
 exports.getPublicKey = async user => {
+    if (cache.publickeys && cache.publickeys[user]) return cache.publickeys[user]
+    else cache.publickeys = cache.publickeys ?? {}
     let response = await request("getpublickey", {
         user
     });
-    if (response.success) return forge.pki.publicKeyFromPem(response.data);
-    throw {
-        "error": "could not get public key of user: " + user,
-        "furtherInformaiton": response
+    try {
+
+        if (response.success) {
+            cache.publickeys[user] = forge.pki.publicKeyFromPem(response.data);
+            return cache.publickeys[user];
+        }
+    } catch{
+        throw("failed to get public key");
     }
+    throw response
 }
 
 exports.getMessagesFromStorage = (chatid) => {
@@ -190,18 +199,18 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
 
 
             // verify sender
-            // doesn't work yet
-            let verified;
+            let verified, decryptMsg;
             try {
                 let publickey = await exports.getPublicKey(sender);
                 let md = forge.md.sha1.create();
-//                console.log(`verifying content ${content}`);
+                //                console.log(`verifying content ${content}`);
                 md.update(content, 'utf8');
                 verified = publickey.verify(md.digest().bytes(), forge.util.hexToBytes(signature));
-//                console.log(`verifying sender ${sender} returned ${verified}`);
+                //                console.log(`verifying sender ${sender} returned ${verified}`);
             } catch (e) {
                 console.log("error while verifying:", e);
                 verified = false;
+                decryptMsg = "error while verifying"
             }
 
 
@@ -218,6 +227,10 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
                 direction: sender == config.get("credentials:username") ? "sent" : "recieved",
                 encryptionType: i.encryptionType,
                 timestamp: i.timestamp,
+                ...decryptMsg ? {
+                    decryptMsg
+                } : null
+
             };
             if (!chatDatabase[chatid]) chatDatabase[chatid] = {
                 title: undefined,

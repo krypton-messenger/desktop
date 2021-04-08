@@ -56,7 +56,6 @@ app.on("activate", () => {
 });
 
 ipcMain.on("message", async (event, arg) => {
-    console.log(arg);
     switch (arg.command) {
         case "windowStateChange":
             switch (arg.data) {
@@ -80,10 +79,8 @@ ipcMain.on("message", async (event, arg) => {
             break;
 
         case "login":
-            console.log("logging in...");
             try {
                 await apiConnection.setCredentials(arg.data.serverurl, arg.data.username, arg.data.password);
-                console.log("successfully signed in");
                 event.reply("message", {
                     trigger: arg.command,
                     success: true
@@ -102,7 +99,6 @@ ipcMain.on("message", async (event, arg) => {
             break;
 
         case "signup":
-            console.log("creating account...");
             try {
                 await apiConnection.createAccount(arg.data.serverurl, arg.data.username, arg.data.password, arg.data.licenceKey);
 
@@ -125,7 +121,7 @@ ipcMain.on("message", async (event, arg) => {
 
 
         case "logout":
-            console.log("logging out...");
+         
             try {
                 config.reset();
                 event.reply("message", {
@@ -143,7 +139,7 @@ ipcMain.on("message", async (event, arg) => {
             break;
 
         case "getmessages":
-            console.log("getting messages");
+          
             try {
                 event.reply("message", {
                     trigger: arg.command,
@@ -167,7 +163,7 @@ ipcMain.on("message", async (event, arg) => {
             break;
 
         case "toggleLoginView":
-            console.log("switching login-view...");
+           
             try {
                 if (arg.data.newView == "signup") {
                     win.loadFile("app/renderer/signup.html");
@@ -192,7 +188,6 @@ ipcMain.on("message", async (event, arg) => {
             break;
 
         case "getConfigCredentials":
-            console.log(arg.data);
             event.reply("message", {
                 trigger: arg.command,
                 username: config.get("credentials:username"),
