@@ -1,3 +1,6 @@
+@import "toast.css";
+@import "contextmenu.css";
+@import "popup.css";
 
 :root {
     --c1: 168deg 25% 48%;
@@ -7,10 +10,6 @@
     --c5: 159deg 10% 10%;
     --c6: 159deg 5% 25%;
 }
-
-@import "toast.css";
-@import "contextmenu.css";
-@import "popup.css";
 
 body {
     font-family: sans-serif;

@@ -4,8 +4,8 @@
     max-width: 80%;
     max-height: 80%;
     overflow: hidden;
-    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 20%));
-    box-shadow: 6px 6px 6px 0 hsl(210deg calc(var(--colorIntensity) + 10%) 0% / .5);
+    background: hsl(var(--c2));
+    box-shadow: 6px 6px 6px 0 hsl(var(--c5)/.5);
     display: grid;
     border-radius: 4px;
     grid-template-rows: 1fr 45px;
@@ -16,7 +16,7 @@
     position: absolute;
     width: 100vw;
     height: 100vh;
-    background: rgb(0 0 0 / 40%);
+    background: hsl(var(--c5)/.5);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -38,28 +38,28 @@
     transition: background .2s, box-shadow .2s, color .2s;
     margin: 5px;
     cursor: pointer;
-    color: hsl(210deg calc(var(--colorIntensity) + 100%) calc(90% - var(--brightness)));
+    color: hsl(var(--c4));
     text-transform: uppercase;
 }
 
 .popupActions button:focus, .popupActions button:hover {
-    background: hsl(210deg calc(var(--colorIntensity) + 7.5%) calc(var(--brightness) + 30%));
-    box-shadow: 2px 2px 6px 0 hsl(210deg calc(var(--colorIntensity) + 7.5%) calc(var(--brightness) + 10%) / .8);
+    background: hsl(var(--c5)/.25);
+    box-shadow: 2px 2px 6px 0 hsl(var(--c5)/.5);
 }
 
 .popupActions button.suggestedAction {
-    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 40%));
-    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(90% - var(--brightness)));
+    background: hsl(var(--c4));
+    color: hsl(var(--c5));
 }
 
 .popupActions button.suggestedAction:hover, .popupActions button.suggestedAction:focus {
-    background: hsl(210deg calc(var(--colorIntensity) + 30%) calc(80% - var(--brightness)));
-    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 10%));
+    background: hsl(var(--c1));
+    color: hsl(var(--c4));
 }
 
 .popupContent {
     padding: 30px;
-    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(90% - var(--brightness)));
+    color: hsl(var(--c4));
     word-break: break-word;
     overflow: auto;
 }
@@ -77,7 +77,7 @@
 }
 
 .popup tr:not(:last-child) {
-    border-bottom: 1px solid hsl(210deg calc(var(--colorIntensity) + 10%) calc(40% - var(--brightness)));
+    border-bottom: 1px solid hsl(var(--c4)/.25);
 }
 
 .popup td.messageInformation_encryptionType[data-value="RSA-AES_CBC"]:after {
@@ -113,7 +113,7 @@
         width: 100% !important;
         border-radius: 2px;
         font-weight: 500;
-        background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(40% - var(--brightness)));
+        background: hsl(var(--c5));
     }
 
     .popup tr:not(:last-child) {

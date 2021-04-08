@@ -7,12 +7,12 @@
     top: min(max(calc(var(--y) * 1px), var(--screenMargin)), calc(100vh - var(--screenMargin) - var(--height)));
     left: min(max(calc(var(--x) * 1px), var(--screenMargin)), calc(100vw - var(--screenMargin) - var(--width)));
     display: grid;
-    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 20%));
+    background: hsl(var(--c2));
     padding: 6px 0;
     border-radius: 3px;
     min-width: var(--width);
     max-width: 80%;
-    box-shadow: 0px 0px 5px 0px hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 10%));
+    box-shadow: 0px 0px 5px 0px hsl(var(--c6));
     max-height: var(--height);
     overflow-y: auto;
 }
@@ -20,7 +20,7 @@
 .contextMenu button.entry {
     background: transparent;
     border: 0;
-    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
+    color: hsl(var(--c4));
     transition: background .2s;
     cursor: pointer;
     padding: 8px 20px;
@@ -33,7 +33,7 @@
 }
 
 .contextMenu button.entry:not([disabled]):hover {
-    background: hsl(210deg calc(var(--colorIntensity) + 20%) calc(var(--brightness) + 30%));
+    background: hsl(var(--c1) /.5);
 }
 
 .contextMenu button.entry[disabled] {

@@ -258,8 +258,7 @@ class MessageElement {
         if (this.selected) return this.deselect()
         this.selected = true;
         window.addEventListener("click", (e) => {
-            if (!e.target.querySelector(".message *")) this.deselectAll();
-            console.log(this);
+            if (!e.target.parentElement.querySelector(".message *") && this.selected) this.deselectAll();
         }, true, {
             once: true
         });
