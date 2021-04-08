@@ -117,13 +117,44 @@ class MessageElement {
         this.container = document.createElement("div");
         this.container.dataset.messageId = data.message_id;
 
-        this.container.classList.add("message", data.direction ?? "unknownDirection");
+        this.container.classList.add("message", data.direction);
+        this.container.addEventListener("mouseup", (e) => {
+            if (this.longPress && this.container.parentElement.querySelector(".selected.message")) this.select()
+            clearTimeout(this.longPress);
+            this.longPress = false;
+        });
+        this.container.addEventListener("mouseleave", (e) => {
+            clearTimeout(this.longPress);
+        });
+        this.container.addEventListener("mousedown", (e) => {
+            if (e.which == 1) {
+                this.longPress = setTimeout(() => {
+                    this.longPress = false;
+                    this.select()
+                }, 500);
+            }
+        });
+
+        this.container.addEventListener("select", e => {
+            this.select()
+        });
+        this.container.addEventListener("deselect", e => {
+            this.deselect()
+        });
+
         this.container.addEventListener("contextmenu",
             (e) => {
                 new ContextMenu(e, [{
                     label: "Reply",
                     callback: console.log,
                     disabled: true
+                }, {
+                    label: "Select",
+                    callback: (e, obj) => {
+                        obj.select();
+                    },
+                    args: [this],
+                    disabled: false
                 }, {
                     label: "Copy Text",
                     callback: (e, value) => {
@@ -147,9 +178,10 @@ class MessageElement {
                             let tr = document.createElement("tr");
                             for (let j of i) {
                                 let td = document.createElement("td");
-                                td.appendChild(document.createTextNode(j));
-                                td.classList.add("messageInformation_"+i[0]);
-                                td.dataset.value=j;
+                                if (typeof (j) == "object") td.appendChild(document.createTextNode(JSON.stringify(j)));
+                                else td.appendChild(document.createTextNode(j));
+                                td.classList.add("messageInformation_" + i[0]);
+                                td.dataset.value = j;
                                 tr.appendChild(td);
                             }
                             table.appendChild(tr);
@@ -219,6 +251,37 @@ class MessageElement {
                 this.messageContentElmt.appendChild(this.contentElement);
                 break;
 
+        }
+    }
+
+    select() {
+        if (this.selected) return this.deselect()
+        this.selected = true;
+        window.addEventListener("click", (e) => {
+            if (!e.target.querySelector(".message *")) this.deselectAll();
+            console.log(this);
+        }, true, {
+            once: true
+        });
+        this.container.classList.add("selected");
+        this.container.parentElement.classList.add("hasSelectedMessage");
+        this.updateSelectCount();
+    }
+
+    deselect() {
+        this.selected = false;
+        this.container.classList.remove("selected");
+        if (!this.container.parentElement.querySelector(".selected.message")) this.container.parentElement.classList.remove("hasSelectedMessage");
+        this.updateSelectCount();
+    }
+    updateSelectCount() {
+        document.getElementById("selectedMessageCount").innerHTML = document.querySelectorAll(".selected.message").length;
+    }
+
+    deselectAll() {
+        console.log(this.container.parentElement);
+        for (let i of this.container.parentElement.querySelectorAll(".selected.message")) {
+            i.dispatchEvent(new Event("deselect"));
         }
     }
 

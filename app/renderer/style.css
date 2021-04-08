@@ -1,3 +1,13 @@
+
+:root {
+    --c1: 168deg 25% 48%;
+    --c2: 169deg 25% 29%;
+    --c3: 159deg 28% 16%;
+    --c4: 159deg 50% 100%;
+    --c5: 159deg 10% 10%;
+    --c6: 159deg 5% 25%;
+}
+
 @import "toast.css";
 @import "contextmenu.css";
 @import "popup.css";
@@ -136,7 +146,7 @@ input {
 }
 
 a {
-    color: hsl(210deg 40% 50%);
+    color: hsl(var(--c2));
 }
 
 *:focus {
@@ -144,13 +154,13 @@ a {
 }
 
 body {
-    background-color: hsl(210deg 10% 20%);
+    background-color: hsl(var(--c5));
 }
 
 nav {
     -webkit-app-region: drag;
     height: 20px;
-    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 30%));
+    background: hsl(var(--c6)/0.5);
     user-select: none;
     display: flex;
     justify-content: flex-end;
@@ -160,7 +170,7 @@ nav button {
     -webkit-app-region: no-drag;
     background: none;
     border: none;
-    color: hsl(210deg calc(var(--colorIntensity) + 10%) calc(100% - var(--brightness)));
+    color: hsl(var(--c4));
     align-self: center;
     padding: 5px;
     font-size: 0.9em !important;

@@ -10,7 +10,6 @@
     <script src="elements.js" charset="utf-8"></script>
     <title>Krypton Beta</title>
 </head>
-
 <body>
     <nav>
         <button class="material-icons" onclick="minimizeWindow()">minimize</button>
@@ -18,30 +17,20 @@
         <button class="material-icons" id="closeWindow" onclick="closeWindow()">close</button>
     </nav>
     <main>
-        <div id="sideMenu">
+        <div id="sideMenu" class="">
             <div id="sideMenuFocuser" onclick="toggleSideMenu()"></div>
-            <div id="ownProfile">
-                <div>
-                    <span id="ownUserName"></span>
-                    <button>
-                        <span class="material-icons">edit</span>
-                    </button>
-                </div>
-                <button id="toggleUI" onclick="toggleTheme()">
-                    <span class="material-icons">brightness_high</span>
-                </button>
-            </div>
+            
             <div id="sideMenuActions">
 
-                <button onclick="">
+                <button onclick="noImplementation()">
                     <span class="material-icons">create</span>
                     New Chat
                 </button>
-                <button onclick="">
+                <button onclick="noImplementation()">
                     <span class="material-icons">group</span>
                     New Group
                 </button>
-                <button onclick="">
+                <button onclick="noImplementation()">
                     <span class="material-icons">settings</span>
                     Settings
                 </button>
@@ -56,37 +45,60 @@
             <div id="sideMenuFooter">
                 <span>Krypton Desktop</span>
                 <span>Beta Version</span>
-            </div>
+            <button id="toggleUI" onclick="toggleTheme()">
+                    <span class="material-icons">brightness_high</span>
+                </button></div>
         </div>
 
 
 
-        <div id="messageView">
-            <div id="messageContainer"></div>
+        <div id="messageView" class="">
+            <div id="messageContainer" class=""></div>
             <div id="contactInformation">
                 <button onclick="new ChatTile().deselectAll()">
                     <i class="material-icons">arrow_back</i>
                 </button>
-                <span class="chatTitle" id="chatTitle"></span>
-                <span class="chatInfo"></span>
-                <button>
+                <span class="chatTitle" id="chatTitle" onclick="noImplementation()">tim</span>
+                <span class="chatInfo" onclick="noImplementation()"></span>
+                <button onclick="noImplementation()">
                     <i class="material-icons">search</i>
                 </button>
-                <button>
+                <button onclick="noImplementation()">
                     <i class="material-icons">more_vert</i>
                 </button>
             </div>
             <div id="messageActionArea">
 
-                <button>
+                <button onclick="noImplementation()">
                     <i class="material-icons">attach_file</i></button>
                 <textarea id="messageContent" placeholder="Write a message..."></textarea>
-                <button>
+                <button onclick="noImplementation()">
                     <i class="material-icons">schedule</i>
                 </button>
-                <button>
+                <button onclick="noImplementation()">
                     <i class="material-icons">send</i>
                 </button>
+            </div>
+            <div id="selectedMessageActionArea">
+
+                <button>
+                    <i class="material-icons">arrow_back</i>
+                </button>
+                <span id="selectedMessageCount">0</span>
+                <button title="quote" onclick="noImplementation()">
+                    <i class="material-icons">reply</i>
+                </button>
+                <button title="translate" onclick="noImplementation()">
+                    <i class="material-icons">translate</i>
+                </button>
+                <button title="read aloud" onclick="noImplementation()">
+                    <i class="material-icons">volume_up</i>
+                </button>
+                <button title="copy to clipboard" onclick="noImplementation()">
+                    <i class="material-icons">content_copy</i>
+                </button>
+                <button title="forward" onclick="noImplementation()">
+                    <i class="material-icons">send</i></button>
             </div>
         </div>
 
@@ -95,12 +107,14 @@
                 <button id="menuOpener" onclick="toggleSideMenu()" class="material-icons">menu</button>
                 <div id="searchInputContainer">
                     <input type="text" placeholder="Search">
-                    <button>
+                    <button onclick="noImplementation()" id="clearSearchInput">
                         <span class="material-icons">close</span>
                     </button>
-                </div>
+                <button onclick="document.querySelector('#searchBar input').focus()" id="showSearchInput">
+                        <span class="material-icons">search</span>
+                    </button></div>
             </div>
-            <div id="chatList"></div>
+            <div id="chatList"><div class="chatContainer" data-last-message-time="1617567603139" data-chatid="b643e2f7c5e40a4d988becf05418dd9a5f01e39d1bb5c3a880241bfd5357f824be78e6505428107e5bb86906455fd765fc977f8c16f7d83eaba6407e8efdfb15"><div class="profilePicture"></div><span class="contactName">tim</span><span class="messagePreview">0</span></div><div class="chatContainer" data-last-message-time="1617203144298" data-chatid="447104bebe6584b7f869de16afedb579289e000cf1bfe957fd1701c596da535b91d7e72f5b09ef15e14ff335d57f739418465c7ac4195347e7db8a87164bd239"><div class="profilePicture"></div><span class="contactName">admin</span><span class="messagePreview"><span class="material-icons">attach_file</span><span>flyer_p2.pdf</span></span></div></div>
         </div>
 
         <div id="toastBarContainer"></div>
@@ -109,6 +123,11 @@
     </main>
 
     <script>
+        const noImplementation = () => {
+            new Toast("This feature has not yet been implemented", {
+                timer: 2000
+            });
+        }
         const logout = () => {
             window.ipc.send('logout', {});
         }
@@ -218,6 +237,8 @@
         });
 
     </script>
-</body>
 
+
+
+</body>
 </html>

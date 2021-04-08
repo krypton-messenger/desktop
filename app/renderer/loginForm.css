@@ -27,38 +27,6 @@ main:after {
     width: 450px;
     padding: 80px 60px;
     box-sizing: border-box;
-}
-
-main {
-    display: flex;
-    box-flex: 1;
-    flex-direction: column;
-    color: white;
-    min-height: 100vh;
-}
-
-main:before,
-main:after {
-    content: "";
-    -webkit-flex-grow: 1;
-    flex-grow: 1;
-    -webkit-box-flex: 1;
-    box-flex: 1;
-    height: 24px;
-    display: block;
-    transition: .2s;
-}
-
-.login {
-    border-radius: 8px;
-    display: block;
-    -webkit-flex-shrink: 0;
-    flex-shrink: 0;
-    margin: 0 auto;
-    width: 450px;
-    padding: 80px 60px;
-    box-sizing: border-box;
-    /* box-shadow: hsl(220deg 10% 10% /30%) 4px 4px 6px 4px; */
     transition: .2s;
 }
 
@@ -66,35 +34,35 @@ main:after {
     display: block;
     box-sizing: border-box;
     font-size: .9em;
-    background: hsl(210deg 10% 30%);
+    background: hsl(var(--c2)/.5);
     border: none;
     border-radius: 4px;
     padding: 5px 10px;
     outline: none;
-    color: white;
+    color: hsl(var(--c4));
     width: 100%;
     transition: box-shadow .2s;
 }
 
 .login input:focus {
-    box-shadow: hsl(210deg 10% 10% / 50%) 3px 3px 4px;
+    box-shadow: hsl(var(--c4)/.125) 1.5px 1.5px 3px;
 }
 
 .login input[type="button"],
 .login input[type="submit"] {
     background: transparent;
-    border: 1px solid hsl(220deg 3% 65% / 20%);
+    border: 1px solid hsl(var(--c2)/.25);
     text-transform: uppercase;
     transition: .2s;
-    cursor: pointer
+    cursor: pointer;
 }
 
 .login input[type="button"]:hover,
 .login input[type="button"]:focus,
 .login input[type="submit"]:hover,
 .login input[type="submit"]:focus {
-    background: hsl(220deg 7% 25%);
-    border-color: hsl(220deg 7% 25%);
+    background: hsl(var(--c2));
+    border-color: hsl(var(--c2));
     text-transform: uppercase;
     color: white;
 }
@@ -123,93 +91,7 @@ input#submit.loading {
 
 p#error:not(:empty) {
     font-size: .9em;
-    border-bottom: 1px solid hsl(220deg 9% 23%);
-    padding-bottom: 11px;
-    color: hsl(0deg 54% 58%);
-}
-
-@media (max-width: 500px) {
-
-    main:before,
-    main:after {
-        flex-grow: 0;
-        height: 0;
-    }
-
-    .login {
-        margin: 0 0 important;
-        height: 100vh;
-        width: 100vw;
-        border: 0;
-        box-shadow: none;
-    }
-}
-
-transition: .2s;
-}
-
-.login input {
-    display: block;
-    box-sizing: border-box;
-    font-size: .9em;
-    background: hsl(210deg 10% 30%);
-    border: none;
-    border-radius: 4px;
-    padding: 5px 10px;
-    outline: none;
-    color: white;
-    width: 100%;
-    transition: box-shadow .2s;
-}
-
-.login input:focus {
-    box-shadow: hsl(210deg 10% 10% / 50%) 3px 3px 4px;
-}
-
-.login input[type="button"],
-.login input[type="submit"] {
-    background: transparent;
-    border: 1px solid hsl(220deg 3% 65% / 20%);
-    text-transform: uppercase;
-    transition: .2s;
-    cursor: pointer
-}
-
-.login input[type="button"]:hover,
-.login input[type="button"]:focus,
-.login input[type="submit"]:hover,
-.login input[type="submit"]:focus {
-    background: hsl(220deg 7% 25%);
-    border-color: hsl(220deg 7% 25%);
-    text-transform: uppercase;
-    color: white;
-}
-
-.login input:not(:last-of-type) {
-    margin-bottom: 5px;
-}
-
-input#submit.error {
-    background: hsl(0deg 50% 50% / 60%);
-    border: hsl(0deg 50% 50% / 60%);
-    color: white;
-}
-
-input#submit.success {
-    background: hsl(160deg 50% 50% / 60%);
-    border: hsl(160deg 50% 50% / 60%);
-    color: black;
-}
-
-input#submit.loading {
-    background: hsl(0deg 0% 50% / 58%);
-    border: hsl(0deg 0% 50% / 58%);
-    color: black;
-}
-
-p#error:not(:empty) {
-    font-size: .9em;
-    border-bottom: 1px solid hsl(220deg 9% 23%);
+    border-bottom: 1px solid hsl(var(--c2)/.5);
     padding-bottom: 11px;
     color: hsl(0deg 54% 58%);
 }

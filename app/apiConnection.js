@@ -161,7 +161,8 @@ exports.getPublicKey = async user => {
     });
     if (response.success) return forge.pki.publicKeyFromPem(response.data);
     throw {
-        "error": "could not get public key of user: " + user
+        "error": "could not get public key of user: " + user,
+        "furtherInformaiton": response
     }
 }
 
@@ -191,13 +192,13 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
             // verify sender
             // doesn't work yet
             let verified;
-            console.log(signature);
-            console.log(content);
             try {
                 let publickey = await exports.getPublicKey(sender);
                 let md = forge.md.sha1.create();
+//                console.log(`verifying content ${content}`);
                 md.update(content, 'utf8');
-                verified = publickey.verify(md, signature);
+                verified = publickey.verify(md.digest().bytes(), forge.util.hexToBytes(signature));
+//                console.log(`verifying sender ${sender} returned ${verified}`);
             } catch (e) {
                 console.log("error while verifying:", e);
                 verified = false;
