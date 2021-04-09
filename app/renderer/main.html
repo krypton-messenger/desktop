@@ -31,7 +31,7 @@
                     <span class="material-icons">group</span>
                     New Group
                 </button>
-                <button onclick="noImplementation()">
+                <button onclick="showSettings()">
                     <span class="material-icons">settings</span>
                     Settings
                 </button>
@@ -148,6 +148,54 @@
             }
         }
 
+        const showSettings = () => {
+            let items = {
+                type: "div",
+                content: [{
+                    type: "span",
+                    class: ["popupTitle"],
+                    content: ["settings"]
+                }, {
+                    type: "div",
+                    class: ["settingsEntry"],
+                    content: [{
+                        type: "span",
+                        content: ["theme"]
+                    }, {
+                        type: "button",
+                        class: ["material-icons"],
+                        onclick: toggleTheme,
+                        content: ["brightness_high"]
+                    }, {
+                        type: "button",
+                        class: ["material-icons"],
+                        content: ["expand_more"]
+                    }]
+                }]
+            };
+
+            let createItemElement = (data) => {
+                let elmt = document.createElement(data.type ?? "div");
+                if (data.class) elmt.classList.add(...data.class);
+                if (data.onclick) elmt.onclick = data.onclick;
+                for (var i of data.content ?? []) {
+                    if (typeof(i) == "string") elmt.appendChild(document.createTextNode(i));
+                    else elmt.appendChild(createItemElement(i));
+                }
+                return elmt;
+            }
+
+            let settingsContainer = createItemElement(items);
+
+            new Popup(settingsContainer, {
+                cancel: false,
+                okButton: {
+                    label: "ok"
+                }
+            }).show();
+        }
+
+
         window.ipc.send('chatList', {
             request: true
         });
@@ -231,6 +279,12 @@
                     }
                     document.getElementById("ownUserName").appendChild(document.createTextNode("@" + response.data.username));
                     if (response.data.profilePictureURI) document.getElementById("ownProfile").style.setProperty("--profilePicture", "url(" + response.data.profilePictureURI + ")");
+                    break;
+
+                case "downloadFile":
+                    new Toast(response.data, {
+                        timer: 2000
+                    });
                     break;
                 default:
                     new Toast("Unknown action: " + response.trigger)

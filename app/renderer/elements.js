@@ -219,7 +219,11 @@ class MessageElement {
                     fileId,
                     rawSize,
                     encryptedSize,
-                    mimeType
+                    mimeType,
+                    chatId: data.chat_id
+                };
+                this.container.onclick = () => {
+                    this.downloadFile(this.file);
                 };
 
                 this.contentElement = document.createElement("div");
@@ -253,7 +257,13 @@ class MessageElement {
 
         }
     }
-
+    downloadFile(file) {
+        window.ipc.send('downloadFile', {
+            id: file.fileId,
+            title: file.title,
+            chatId: file.chatId
+        });
+    }
     select() {
         if (this.selected) return this.deselect()
         this.selected = true;
@@ -476,7 +486,7 @@ class Popup {
         if (value.okButton) {
             this._buttons.okButton = {
                 label: value.okButton.label,
-                callback: value.okButton.callback,
+                callback: value.okButton.callback ?? this.remove,
                 elmt: document.createElement("button")
             }
             this._buttons.okButton.elmt.appendChild(document.createTextNode(this._buttons.okButton.label));

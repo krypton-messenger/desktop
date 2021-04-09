@@ -3,12 +3,23 @@
 @import "popup.css";
 
 :root {
-    --c1: 168deg 25% 48%;
-    --c2: 169deg 25% 29%;
-    --c3: 159deg 28% 16%;
-    --c4: 159deg 50% 100%;
-    --c5: 159deg 10% 10%;
-    --c6: 159deg 5% 25%;
+    --h: 168deg;
+    --c1: var(--h) 25% 48%;
+    --c2: calc(var(--h) + 1deg) 25% 29%;
+    --c3: calc(var(--h) - 7deg) 15% 5%;
+    --c4: calc(var(--h) - 9deg) 50% 100%;
+    --c5: calc(var(--h) - 9deg) 10% 10%;
+    --c6: calc(var(--h) - 9deg) 5% 25%;
+}
+
+:root.light {
+    --h: 168deg;
+    --c1: var(--h) 25% 48%;
+    --c2: calc(var(--h) + 1deg) 20% 80%;
+    --c3: calc(var(--h) - 7deg) 5% 45%;
+    --c4: calc(var(--h) - 9deg) 20% 10%;
+    --c5: calc(var(--h) - 9deg) 5% 98%;
+    --c6: calc(var(--h) - 9deg) 5% 90%;
 }
 
 body {

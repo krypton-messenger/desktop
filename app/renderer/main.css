@@ -233,7 +233,7 @@ span.fileSize {
 }
 
 #chatList {
-    border-right: 1px solid hsla(var(--c4)/.25);
+    border-right: 1px solid hsla(var(--c4)/.125);
     background: hsl(var(--c5));
     display: flex;
     flex-direction: column;
@@ -246,7 +246,7 @@ span.fileSize {
     content: "";
     height: 25px;
     width: 25px;
-    border: solid hsla(var(--c4)/.25);
+    border: solid hsla(var(--c4)/.125);
     border-radius: 100%;
     border-bottom-color: transparent;
     animation: loadingRotate 1.5s infinite linear;
@@ -284,7 +284,7 @@ span.fileSize {
 }
 
 .selected.chatContainer {
-    background: hsla(var(--c2)/.5);
+    background: hsla(var(--c6));
 }
 
 .chatContainer {
@@ -293,17 +293,17 @@ span.fileSize {
     grid-template-rows: 30px 30px;
     padding: 5px;
     transition: background .2s;
-    border-bottom: 1px solid hsla(var(--c4)/.25);
+    /* border-bottom: 1px solid hsla(var(--c4)/.125); */
     cursor: pointer;
     overflow: hidden;
 }
 
-.chatContainer:hover {
-    background: hsla(var(--c6));
+.chatContainer:not(.selected):hover {
+    background: hsla(var(--c6)/.5);
 }
 
 .contactName {
-    font-weight: bold;
+    font-weight: 500;
     padding-top: 7px;
     padding-left: 7px;
     color: hsla(var(--c4));
@@ -318,7 +318,7 @@ span.fileSize {
 }
 
 #searchBar {
-    border-right: 1px solid hsla(var(--c4)/.25);
+    border-right: 1px solid hsla(var(--c4)/.125);
     display: grid;
     grid-template-columns: 50px 1fr;
     place-items: center;
@@ -436,7 +436,7 @@ span.fileSize {
     bottom: 0;
     left: 0;
     width: 260px;
-    background: hsl(var(--c5));
+    background: linear-gradient(0deg, hsl(var(--c5)/.5), hsl(var(--c5)/.5)), linear-gradient(0deg, hsl(var(--c6)), hsl(var(--c6)));
     z-index: 2;
     display: grid;
     grid-template-rows: 1fr 75px;

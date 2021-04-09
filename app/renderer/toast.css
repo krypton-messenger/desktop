@@ -22,8 +22,8 @@ div#toastBarContainer:empty {
     width: 100%;
     max-width: 800px;
     height: 100%;
-    background: hsl(210deg 10% 30%);
-    box-shadow: 5px 5px 11px 0px hsl(210deg 10% 10%);
+    background: hsl(var(--c6));
+    box-shadow: 5px 5px 11px 0px hsl(var(--c3));
     border-radius: 3px;
     align-items: center;
     justify-content: flex-end;
@@ -38,7 +38,7 @@ div#toastBarContainer:empty {
 }
 
 #toastBarContainer span.toastMessage {
-    color: hsl(210deg 10% 90%);
+    color: hsl(var(--c4));
     width: 100%;
 }
 
@@ -47,21 +47,22 @@ div#toastBarContainer:empty {
     border:0;
     border-radius:2px;
     font-size:inherit;
-    color: hsl(210deg 100% 80%);
+    color: hsl(var(--c1));
     padding:8px 10px;
     cursor: pointer;
-    transition:background .2s;
+    transition:background .2s, color .2s;
 }
 
 #toastBarContainer button.toastAction:hover {
-    background: hsl(210 10% 40% / 1);
+    background: hsl(var(--c1)/.5);
+    color:hsl(var(--c4));
 }
 
 #toastBarContainer button.close {
     background:none;
     border:0;
     font-family: 'materialIcons';
-    color: hsl(210deg 10% 90%);
+    color: hsl(var(--c4));
     font-size: 26px;
     justify-self: end;
     cursor: pointer;
@@ -70,13 +71,13 @@ div#toastBarContainer:empty {
     height:40px;
     width: 40px;
     transform: scale(.8);
-        padding: 8px 10px;
+    padding: 8px 10px;
     display: flex;
     justify-content: center;
 }
 
 #toastBarContainer button.close:hover {
-    background: hsl(210 10% 40% / 1);
+    background: hsl(var(--c4)/.25);
 }
 
 .toast:first-of-type:not(.removing) {
@@ -93,7 +94,7 @@ div#toastBarContainer:empty {
     transition: width calc(var(--timeout) * 1ms) linear;
     max-width: 100%;
     bottom: 0;
-    border: 1px solid hsl(210deg calc(var(--colorIntensity) + 30%) calc(var(--brightness) + 50%));
+    border: 1px solid hsl(var(--c1));
     border-bottom-left-radius: 3px;
     box-sizing: border-box;
     border-bottom-right-radius: 3px;

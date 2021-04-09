@@ -4,7 +4,8 @@ const {
     BrowserWindow,
     nativeImage,
     Notification,
-    ipcMain
+    ipcMain,
+    dialog
 } = require("electron"),
     path = require("path"),
     fs = require("fs"),
@@ -121,7 +122,7 @@ ipcMain.on("message", async (event, arg) => {
 
 
         case "logout":
-         
+
             try {
                 config.reset();
                 event.reply("message", {
@@ -139,7 +140,7 @@ ipcMain.on("message", async (event, arg) => {
             break;
 
         case "getmessages":
-          
+
             try {
                 event.reply("message", {
                     trigger: arg.command,
@@ -163,7 +164,7 @@ ipcMain.on("message", async (event, arg) => {
             break;
 
         case "toggleLoginView":
-           
+
             try {
                 if (arg.data.newView == "signup") {
                     win.loadFile("app/renderer/signup.html");
@@ -210,6 +211,32 @@ ipcMain.on("message", async (event, arg) => {
                 event.reply("message", {
                     trigger: arg.command,
                     ...e
+                });
+            }
+            break;
+
+
+
+        case "downloadFile":
+            console.log("downloading file", arg);
+            
+            // docs: https://github.com/electron/electron/blob/master/docs/api/dialog.md#dialogshowsavedialogbrowserwindow-options
+            console.log("save as "+ arg.data.title);
+            let result = await dialog.showSaveDialog({
+                defaultPath: arg.data.title
+            });
+            if(!result.canceled){
+                 event.reply("message", {
+                    trigger: arg.command,
+                    success: undefined,
+                    data: `Downloading ${arg.data.title}`
+                });
+                console.log(`saving to ${result.filePath}`);
+            }else{
+                 event.reply("message", {
+                    trigger: arg.command,
+                    success: false,
+                    data: "Download aborted by user"
                 });
             }
             break;

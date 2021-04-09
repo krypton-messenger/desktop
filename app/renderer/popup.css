@@ -4,8 +4,8 @@
     max-width: 80%;
     max-height: 80%;
     overflow: hidden;
-    background: hsl(var(--c2));
-    box-shadow: 6px 6px 6px 0 hsl(var(--c5)/.5);
+    background: linear-gradient(0deg, hsl(var(--c5)/.5), hsl(var(--c5)/.5)), linear-gradient(0deg, hsl(var(--c6)), hsl(var(--c6)));
+    box-shadow: 6px 6px 6px 0 hsl(var(--c3) /.5);
     display: grid;
     border-radius: 4px;
     grid-template-rows: 1fr 45px;
@@ -44,7 +44,7 @@
 
 .popupActions button:focus, .popupActions button:hover {
     background: hsl(var(--c5)/.25);
-    box-shadow: 2px 2px 6px 0 hsl(var(--c5)/.5);
+    box-shadow: 2px 2px 6px 0 hsl(var(--c3));
 }
 
 .popupActions button.suggestedAction {
@@ -119,4 +119,34 @@
     .popup tr:not(:last-child) {
         border-bottom: 15px solid transparent;
     }
+}
+
+
+.popup .popupTitle {
+    font-size: larger;
+    text-transform: capitalize;
+}
+.popup .popupTitle{
+    border-bottom: .5em solid hsl(var(--c6));
+    padding:5px 0;
+    width:100%
+}
+.popup button.material-icons{
+    background:transparent;
+    border:0;
+    color:hsl(var(--c4));
+    display: inline-flex;
+}
+
+.popup span {
+    display: inline-flex;
+}
+
+.settingsEntry{
+    display:flex;
+    margin: 10px 0;
+}
+.settingsEntry span {
+    place-self: center;
+    width: 50%;
 }
