@@ -169,8 +169,8 @@ exports.getPublicKey = async user => {
             cache.publickeys[user] = forge.pki.publicKeyFromPem(response.data);
             return cache.publickeys[user];
         }
-    } catch{
-        throw("failed to get public key");
+    } catch {
+        throw ("failed to get public key");
     }
     throw response
 }
@@ -178,7 +178,43 @@ exports.getPublicKey = async user => {
 exports.getMessagesFromStorage = (chatid) => {
     return Object.values(chatDatabase[chatid].messages);
 }
+exports.sendMessage = async (value, chatid, quote, messageType) => {
+    let msgcontent = JSON.stringify({
+        value,
+        quote
+    });
+    let sk = forge.pki.decryptRsaPrivateKey(config.get("credentials:privateKey:encrypted"), config.get("credentials:password:sha256"));
 
+    let md = forge.md.sha1.create().update(msgcontent, 'utf8');
+    let signature = forge.util.bytesToHex(sk.sign(md));
+    let chatKey = await chatIdToChatKey(chatid);
+
+    if (!chatKey) {
+        throw {
+            "error": "Could not send message, Key not found"
+        }
+    }
+
+    let content = aesEncrypt([config.get("credentials:username"), msgcontent, signature, messageType ?? "text"].join("::"), chatKey);
+    try {
+        let serverResponse = request("sendmessage", {
+            content,
+            chatid
+        });
+        if (serverResponse.success) {
+            return serverResponse;
+        } else {
+            throw {
+                "error": serverResponse.error.description
+            }
+        }
+    } catch (e) {
+        throw {
+            "error": "server unreachable"
+        }
+    }
+
+}
 exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
     let response = await request("getmessages", {
         chatid,
@@ -193,45 +229,62 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
 
             // decrypt message
             let [sender, content, signature, messageType] = aesDecrypt(i.content, chatKey).split("::");
-
-            // decode content
-            content = forge.util.decodeUtf8(forge.util.hexToBytes(content));
-
-
-            // verify sender
-            let verified, decryptMsg;
             try {
-                let publickey = await exports.getPublicKey(sender);
-                let md = forge.md.sha1.create();
-                //                console.log(`verifying content ${content}`);
-                md.update(content, 'utf8');
-                verified = publickey.verify(md.digest().bytes(), forge.util.hexToBytes(signature));
-                //                console.log(`verifying sender ${sender} returned ${verified}`);
+
+                // decode content
+                content = forge.util.decodeUtf8(forge.util.hexToBytes(content));
+
+
+                // verify sender
+                let verified, decryptMsg;
+                try {
+                    let publickey = await exports.getPublicKey(sender);
+                    let md = forge.md.sha1.create();
+                    md.update(content, 'utf8');
+                    verified = publickey.verify(md.digest().bytes(), forge.util.hexToBytes(signature));
+                    //                console.log(`verifying sender ${sender} returned ${verified}`);
+                } catch (e) {
+                    console.log("error while verifying:", e);
+                    verified = false;
+                    decryptMsg = "error while verifying"
+                }
+
+
+                // parse content
+                message = JSON.parse(content);
+
+                var messageData = {
+                    message_id: i.message_id,
+                    sender,
+                    verified,
+                    messageType,
+                    message,
+                    chat_id: i.chat_id,
+                    direction: sender == config.get("credentials:username") ? "sent" : "recieved",
+                    encryptionType: i.encryptionType,
+                    timestamp: i.timestamp,
+                    ...decryptMsg ? {
+                        decryptMsg
+                    } : null
+
+                };
+
             } catch (e) {
-                console.log("error while verifying:", e);
-                verified = false;
-                decryptMsg = "error while verifying"
+                var messageData = {
+                    message_id: i.message_id,
+                    sender,
+                    verified: false,
+                    messageType,
+                    message: {
+                        value: "ERR_DECRYPT"
+                    },
+                    chat_id: i.chat_id,
+                    direction: sender == config.get("credentials:username") ? "sent" : "recieved",
+                    encryptionType: i.encryptionType,
+                    timestamp: i.timestamp,
+                    decryptMsg: "Error decrypting message"
+                };
             }
-
-
-            // parse content
-            message = JSON.parse(content);
-
-            let messageData = {
-                message_id: i.message_id,
-                sender,
-                verified,
-                messageType,
-                message,
-                chat_id: i.chat_id,
-                direction: sender == config.get("credentials:username") ? "sent" : "recieved",
-                encryptionType: i.encryptionType,
-                timestamp: i.timestamp,
-                ...decryptMsg ? {
-                    decryptMsg
-                } : null
-
-            };
             if (!chatDatabase[chatid]) chatDatabase[chatid] = {
                 title: undefined,
                 chatKey,
@@ -248,26 +301,41 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
         }
     }
 }
-exports.getChats = async () => {
+
+const chatIdToChatKey = async (chatId) => {
+    chats = await exports.getChats(true);
+    console.log(chats);
+    return chats[chatId];
+}
+
+exports.getChats = async (chatkeysonly) => {
     let response = await request("getchatkeys", {
         username: config.get("credentials:username")
     });
     if (response.success) {
         let chatInformation = response.data == null ? {} : JSON.parse(aesDecrypt(response.data, config.get("credentials:password:sha256")));
-        let contacts = [];
-        for (var i in chatInformation) {
-            let profilePicture = await exports.getProfilePicture(i);
-            let messages = await exports.getMessages(chatInformation[i].chatId, chatInformation[i].chatKey, 1, 0, true);
-            console.log("messagelength", messages);
-            contacts.push({
-                username: i,
-                profilePicture,
-                lastMessage: messages[0],
-                chatid: chatInformation[i].chatId,
-                chatKey: chatInformation[i].chatKey
-            })
+        if (chatkeysonly) {
+            let chats = {};
+            for (var i in chatInformation) {
+                chats[chatInformation[i].chatId] = chatInformation[i].chatKey
+            }
+            return chats;
+        } else {
+            let chats = [];
+            for (var i in chatInformation) {
+                let profilePicture = await exports.getProfilePicture(i);
+                let messages = await exports.getMessages(chatInformation[i].chatId, chatInformation[i].chatKey, 1, 0, true);
+                console.log("messagelength ", messages.length);
+                chats.push({
+                    username: i,
+                    profilePicture,
+                    lastMessage: messages[0],
+                    chatid: chatInformation[i].chatId,
+                    chatKey: chatInformation[i].chatKey
+                })
+            }
+            return chats;
         }
-        return contacts;
     } else {
         throw response
     }

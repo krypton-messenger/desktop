@@ -4,6 +4,7 @@ class ChatTile {
             this.lastMessageDate = new Date(data.lastMessage.timestamp);
             this.container = document.createElement("div");
             this.container.classList.add("chatContainer");
+            this.container.setAttribute("tabindex", "0");
             this.container.dataset.lastMessageTime = this.lastMessageDate.getTime();
             this.container.dataset.chatid = data.lastMessage.chat_id;
 
@@ -71,7 +72,9 @@ class ChatTile {
                 this.messagePreview.appendChild(fileName);
                 break;
             default:
-                this.messagePreview.appendChild(document.createTextNode(value.message.value));
+                let prev = document.createElement("span");
+                prev.appendChild(document.createTextNode(value.message.value));
+                this.messagePreview.appendChild(prev);
                 break;
         }
         this.messageTime = document.createElement("span");
@@ -110,151 +113,154 @@ class ChatTile {
 
 class MessageElement {
     constructor(data) {
-        this.MarkdownConverter = new MarkdownConverter();
-        this.date = new Date(data.timestamp);
-        this.data = data;
+        if (data) {
 
-        this.container = document.createElement("div");
-        this.container.dataset.messageId = data.message_id;
+            this.MarkdownConverter = new MarkdownConverter();
+            this.date = new Date(data.timestamp);
+            this.data = data;
 
-        this.container.classList.add("message", data.direction);
-        this.container.addEventListener("mouseup", (e) => {
-            if (this.longPress && this.container.parentElement.querySelector(".selected.message")) this.select()
-            clearTimeout(this.longPress);
-            this.longPress = false;
-        });
-        this.container.addEventListener("mouseleave", (e) => {
-            clearTimeout(this.longPress);
-        });
-        this.container.addEventListener("mousedown", (e) => {
-            if (e.which == 1) {
-                this.longPress = setTimeout(() => {
-                    this.longPress = false;
-                    this.select()
-                }, 500);
-            }
-        });
-
-        this.container.addEventListener("select", e => {
-            this.select()
-        });
-        this.container.addEventListener("deselect", e => {
-            this.deselect()
-        });
-
-        this.container.addEventListener("contextmenu",
-            (e) => {
-                new ContextMenu(e, [{
-                    label: "Reply",
-                    callback: console.log,
-                    disabled: true
-                }, {
-                    label: "Select",
-                    callback: (e, obj) => {
-                        obj.select();
-                    },
-                    args: [this],
-                    disabled: false
-                }, {
-                    label: "Copy Text",
-                    callback: (e, value) => {
-                        console.log("copy text");
-                        navigator.clipboard.writeText(value).then(() => {
-                            new Toast("Text copied to tlipboard", {
-                                timer: 1000
-                            });
-                        });
-                    },
-                    args: [this.data.message.value],
-                    disabled: false
-                }, {
-                    label: "Message information",
-                    callback: (e, messageData) => {
-                        let tableData = Object.keys(messageData).map((key, index) => {
-                            return [key, Object.values(messageData)[index]]
-                        })
-                        let table = document.createElement("table");
-                        for (let i of tableData) {
-                            let tr = document.createElement("tr");
-                            for (let j of i) {
-                                let td = document.createElement("td");
-                                if (typeof (j) == "object") td.appendChild(document.createTextNode(JSON.stringify(j)));
-                                else td.appendChild(document.createTextNode(j));
-                                td.classList.add("messageInformation_" + i[0]);
-                                td.dataset.value = j;
-                                tr.appendChild(td);
-                            }
-                            table.appendChild(tr);
-                        }
-
-                        new Popup(table, {
-                            cancel: false,
-                            okButton: {
-                                label: "Okay",
-                                callback: () => {
-                                    new Popup().remove(true)
-                                }
-                            }
-                        }).show();
-                    },
-                    args: [this.data],
-                    disabled: false
-                }]);
+            this.container = document.createElement("div");
+            this.container.dataset.messageId = data.message_id;
+            this.container.messageElement = this;
+            this.container.classList.add("message", data.direction);
+            this.container.addEventListener("mouseup", (e) => {
+                if (this.longPress && this.container.parentElement.querySelector(".selected.message")) this.select()
+                clearTimeout(this.longPress);
+                this.longPress = false;
             });
-        this.container.dataset.timestampMinutes = this.pad(this.date.getMinutes(), 2);
-        this.container.dataset.timestampHours = this.pad(this.date.getHours(), 2);
-        this.container.dataset.timestamp = this.date.getTime();
-        this.container.dataset.verified = data.verified;
-        this.container.classList.add(data.messageType ?? "text");
+            this.container.addEventListener("mouseleave", (e) => {
+                clearTimeout(this.longPress);
+            });
+            this.container.addEventListener("mousedown", (e) => {
+                if (e.which == 1) {
+                    this.longPress = setTimeout(() => {
+                        this.longPress = false;
+                        this.select()
+                    }, 500);
+                }
+            });
 
-        this.messageContentElmt = document.createElement("div");
-        this.messageContentElmt.classList.add("messageContent");
-        this.container.appendChild(this.messageContentElmt);
-        this.messageType = data.messageType;
-        switch (this.messageType) {
-            case "file":
-                let [title, fileId, rawSize, encryptedSize, mimeType] = data.message.value.split(":");
-                this.file = {
-                    title,
-                    fileId,
-                    rawSize,
-                    encryptedSize,
-                    mimeType,
-                    chatId: data.chat_id
-                };
-                this.container.onclick = () => {
-                    this.downloadFile(this.file);
-                };
+            this.container.addEventListener("select", e => {
+                this.select()
+            });
+            this.container.addEventListener("deselect", e => {
+                this.deselect()
+            });
 
-                this.contentElement = document.createElement("div");
-                this.contentElement.classList.add("file");
-                this.contentElement.dataset.title = this.file.title;
-                this.contentElement.dataset.fileId = this.file.fileId;
-                this.contentElement.dataset.rawSize = this.file.rawSize;
-                this.contentElement.dataset.encryptedSize = this.file.encryptedSize;
-                this.contentElement.dataset.mimeType = this.file.mimeType;
+            this.container.addEventListener("contextmenu",
+                (e) => {
+                    new ContextMenu(e, [{
+                        label: "Reply",
+                        callback: console.log,
+                        disabled: true
+                }, {
+                        label: "Select",
+                        callback: (e, obj) => {
+                            obj.select();
+                        },
+                        args: [this],
+                        disabled: false
+                }, {
+                        label: "Copy Text",
+                        callback: (e, value) => {
+                            console.log("copy text");
+                            navigator.clipboard.writeText(value).then(() => {
+                                new Toast("Text copied to tlipboard", {
+                                    timer: 1000
+                                });
+                            });
+                        },
+                        args: [this.data.message.value],
+                        disabled: false
+                }, {
+                        label: "Message information",
+                        callback: (e, messageData) => {
+                            let tableData = Object.keys(messageData).map((key, index) => {
+                                return [key, Object.values(messageData)[index]]
+                            })
+                            let table = document.createElement("table");
+                            for (let i of tableData) {
+                                let tr = document.createElement("tr");
+                                for (let j of i) {
+                                    let td = document.createElement("td");
+                                    if (typeof (j) == "object") td.appendChild(document.createTextNode(JSON.stringify(j)));
+                                    else td.appendChild(document.createTextNode(j));
+                                    td.classList.add("messageInformation_" + i[0]);
+                                    td.dataset.value = j;
+                                    tr.appendChild(td);
+                                }
+                                table.appendChild(tr);
+                            }
 
-                this.file.titleElement = document.createElement("span");
-                this.file.titleElement.classList.add("fileTitle");
-                this.file.titleElement.appendChild(document.createTextNode(this.file.title));
-                this.contentElement.appendChild(this.file.titleElement);
+                            new Popup(table, {
+                                cancel: false,
+                                okButton: {
+                                    label: "Okay",
+                                    callback: () => {
+                                        new Popup().remove(true)
+                                    }
+                                }
+                            }).show();
+                        },
+                        args: [this.data],
+                        disabled: false
+                }]);
+                });
+            this.container.dataset.timestampMinutes = this.pad(this.date.getMinutes(), 2);
+            this.container.dataset.timestampHours = this.pad(this.date.getHours(), 2);
+            this.container.dataset.timestamp = this.date.getTime();
+            this.container.dataset.verified = data.verified;
+            this.container.classList.add(data.messageType ?? "text");
+
+            this.messageContentElmt = document.createElement("div");
+            this.messageContentElmt.classList.add("messageContent");
+            this.container.appendChild(this.messageContentElmt);
+            this.messageType = data.messageType;
+            switch (this.messageType) {
+                case "file":
+                    let [title, fileId, rawSize, encryptedSize, mimeType] = data.message.value.split(":");
+                    this.file = {
+                        title,
+                        fileId,
+                        rawSize,
+                        encryptedSize,
+                        mimeType,
+                        chatId: data.chat_id
+                    };
+                    this.container.onclick = () => {
+                        if (!this.container.parentElement.querySelector(".selected.message")) this.downloadFile(this.file);
+                    };
+
+                    this.contentElement = document.createElement("div");
+                    this.contentElement.classList.add("file");
+                    this.contentElement.dataset.title = this.file.title;
+                    this.contentElement.dataset.fileId = this.file.fileId;
+                    this.contentElement.dataset.rawSize = this.file.rawSize;
+                    this.contentElement.dataset.encryptedSize = this.file.encryptedSize;
+                    this.contentElement.dataset.mimeType = this.file.mimeType;
+
+                    this.file.titleElement = document.createElement("span");
+                    this.file.titleElement.classList.add("fileTitle");
+                    this.file.titleElement.appendChild(document.createTextNode(this.file.title));
+                    this.contentElement.appendChild(this.file.titleElement);
 
 
-                this.file.sizeSpan = document.createElement("span");
-                this.file.sizeSpan.classList.add("fileSize");
-                this.file.sizeSpan.appendChild(document.createTextNode(this.formatBytes(this.file.rawSize)));
-                this.contentElement.appendChild(this.file.sizeSpan);
+                    this.file.sizeSpan = document.createElement("span");
+                    this.file.sizeSpan.classList.add("fileSize");
+                    this.file.sizeSpan.appendChild(document.createTextNode(this.formatBytes(this.file.rawSize)));
+                    this.contentElement.appendChild(this.file.sizeSpan);
 
 
-                this.messageContentElmt.appendChild(this.contentElement);
+                    this.messageContentElmt.appendChild(this.contentElement);
 
-                break;
-            default:
-                this.contentElement = document.createElement("p");
-                this.contentElement.appendChild(this.MarkdownConverter.convert(data.message.value));
-                this.messageContentElmt.appendChild(this.contentElement);
-                break;
+                    break;
+                default:
+                    this.contentElement = document.createElement("p");
+                    this.contentElement.appendChild(this.MarkdownConverter.convert(data.message.value));
+                    this.messageContentElmt.appendChild(this.contentElement);
+                    break;
 
+            }
         }
     }
     downloadFile(file) {
@@ -504,12 +510,30 @@ class Popup {
             for (let i of document.querySelectorAll(".popup")) {
                 i.parentElement.removeChild(i);
             }
+
+            // remove all event listeners by replacing container with a clone
+            let container = document.getElementById("popupContainer"),
+                containerClone = container.cloneNode(true);
+            container.replaceWith(containerClone);
+
+
         } else {
             this.container.parentElement.removeChild(this.container);
+            document.getElementById("popupContainer").removeEventListener("click", popup.removeViaContainer);
         }
     }
+
+    removeViaContainer(e) {
+        if (e.target.id == "popupContainer") new Popup().remove(true)
+    }
+
     show() {
         document.getElementById("popupContainer").appendChild(this.container);
+        let popup = this;
+        // prevent unwanted closing of popup
+        setTimeout(() => {
+            document.getElementById("popupContainer").addEventListener("click", popup.removeViaContainer)
+        }, 200);
     }
 
 }

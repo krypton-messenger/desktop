@@ -58,6 +58,23 @@ app.on("activate", () => {
 
 ipcMain.on("message", async (event, arg) => {
     switch (arg.command) {
+        case "sendmessage":
+            try {
+
+                event.reply("message", {
+                    trigger: arg.command,
+                    ...await apiConnection.sendMessage(arg.data.content, arg.data.chatId, arg.data.quote)
+                });
+            }catch(e){
+                
+                event.reply("message", {
+                    trigger: arg.command,
+                    success:false,
+                    ...e
+                });
+            }
+            break;
+
         case "windowStateChange":
             switch (arg.data) {
                 case "minimize":
@@ -219,21 +236,21 @@ ipcMain.on("message", async (event, arg) => {
 
         case "downloadFile":
             console.log("downloading file", arg);
-            
+
             // docs: https://github.com/electron/electron/blob/master/docs/api/dialog.md#dialogshowsavedialogbrowserwindow-options
-            console.log("save as "+ arg.data.title);
+            console.log("save as " + arg.data.title);
             let result = await dialog.showSaveDialog({
                 defaultPath: arg.data.title
             });
-            if(!result.canceled){
-                 event.reply("message", {
+            if (!result.canceled) {
+                event.reply("message", {
                     trigger: arg.command,
                     success: undefined,
                     data: `Downloading ${arg.data.title}`
                 });
                 console.log(`saving to ${result.filePath}`);
-            }else{
-                 event.reply("message", {
+            } else {
+                event.reply("message", {
                     trigger: arg.command,
                     success: false,
                     data: "Download aborted by user"

@@ -176,10 +176,13 @@ main {
     transform: translateY(-50%);
     transition: opacity .2s;
 }
-.selected.message .messageContent::before{
-    color:hsl(var(--c1));
+
+.selected.message .messageContent::before {
+    color: hsl(var(--c1));
 }
+
 .message[data-verified="true"]:hover .messageContent::before,
+.message[data-verified="true"]:focus .messageContent::before,
 .selected.message .messageContent::before {
     opacity: 1;
 }
@@ -220,7 +223,11 @@ main {
 
 span.fileTitle {
     font-size: 0.9em;
+    white-space: nowrap;
     place-self: self-end;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 span.fileSize {
@@ -298,7 +305,8 @@ span.fileSize {
     overflow: hidden;
 }
 
-.chatContainer:not(.selected):hover {
+.chatContainer:not(.selected):hover,
+.chatContainer:not(.selected):focus {
     background: hsla(var(--c6)/.5);
 }
 
@@ -315,6 +323,14 @@ span.fileSize {
     text-overflow: ellipsis;
     overflow: hidden;
     display: flex;
+    white-space: nowrap;
+}
+
+.messagePreview span:not(.material-icons) {
+    display: block;
+    width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 #searchBar {
@@ -339,7 +355,7 @@ span.fileSize {
     z-index: inherit;
     transition: width .2s, padding .2s;
     place-self: flex-end;
-    align-self:center;
+    align-self: center;
 }
 
 #searchInputContainer {
@@ -370,8 +386,10 @@ span.fileSize {
     transform: none !important;
     z-index: inherit;
 }
-#searchBar input:focus, #searchBar input:not(:placeholder-shown){
-    width:100%;
+
+#searchBar input:focus,
+#searchBar input:not(:placeholder-shown) {
+    width: 100%;
     padding: 5px 10px;
     padding-right: 30px;
 }
@@ -394,15 +412,18 @@ span.fileSize {
     cursor: pointer;
 }
 
-#showSearchInput:hover {
+#showSearchInput:hover,
+#showSearchInput:focus {
     background: hsl(var(--c4)/.25);
     color: hsl(var(--c4));
 }
 
-#searchBar input:focus ~ #showSearchInput, #searchBar input:not(:placeholder-shown) ~#showSearchInput{
+#searchBar input:focus ~ #showSearchInput,
+#searchBar input:not(:placeholder-shown) ~ #showSearchInput {
     width: 0;
     padding: 5px 0;
 }
+
 #menuOpener {
     --size: 34px;
     border-radius: 50%;
@@ -415,13 +436,13 @@ span.fileSize {
     justify-content: center;
     cursor: pointer;
     align-items: center;
-    color:  hsl(var(--c4)/.5);
+    color: hsl(var(--c4)/.5);
     transition: color .2s;
 }
 
 #menuOpener:hover,
-#menuOpener:focus  {
-    color:  hsl(var(--c4));
+#menuOpener:focus {
+    color: hsl(var(--c4));
     background: hsl(var(--c4)/.25);
 }
 
@@ -450,7 +471,7 @@ span.fileSize {
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-    color:  hsl(var(--c4)/.75);
+    color: hsl(var(--c4)/.75);
     padding: 15px;
 }
 
@@ -484,7 +505,7 @@ span.fileSize {
 #sideMenuActions button {
     background: transparent;
     border: 0;
-    color:  hsl(var(--c4));
+    color: hsl(var(--c4));
     display: grid;
     grid-template-columns: 24px 1fr;
     grid-gap: 15px;
@@ -501,12 +522,15 @@ span.fileSize {
     transition: opacity .2s;
 }
 
-#sideMenuActions button:hover .material-icons {
+#sideMenuActions button:hover .material-icons,
+#sideMenuActions button:focus .material-icons {
     opacity: 1;
 }
 
-#sideMenuActions button:hover {
-    background: hsl(var(--c2));;
+#sideMenuActions button:hover,
+#sideMenuActions button:focus {
+    background: hsl(var(--c2));
+    ;
 }
 
 #contactInformation {
@@ -561,7 +585,8 @@ span.fileSize {
     justify-content: center;
 }
 
-#contactInformation button:hover {
+#contactInformation button:hover,
+#contactInformation button:focus {
     background: hsl(var(--c4)/.25);
     opacity: 1;
 }
@@ -588,7 +613,8 @@ span.fileSize {
     place-content: center;
 }
 
-#messageActionArea button:hover {
+#messageActionArea button:hover,
+#messageActionArea button:focus {
     opacity: 1;
     background: hsl(var(--c4)/.25);
 }
@@ -684,7 +710,8 @@ textarea#messageContent {
     place-content: center;
 }
 
-#selectedMessageActionArea button:hover {
+#selectedMessageActionArea button:hover,
+#selectedMessageActionArea button:focus {
     opacity: 1;
     background: hsla(var(--c4)/.25);
 }

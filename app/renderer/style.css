@@ -13,13 +13,12 @@
 }
 
 :root.light {
-    --h: 168deg;
-    --c1: var(--h) 25% 48%;
-    --c2: calc(var(--h) + 1deg) 20% 80%;
+    --c1: var(--h) 30% 70%;
+    --c2: calc(var(--h) + 1deg) 20% 75%;
     --c3: calc(var(--h) - 7deg) 5% 45%;
     --c4: calc(var(--h) - 9deg) 20% 10%;
-    --c5: calc(var(--h) - 9deg) 5% 98%;
-    --c6: calc(var(--h) - 9deg) 5% 90%;
+    --c5: calc(var(--h) - 9deg) 5% 95%;
+    --c6: calc(var(--h) - 9deg) 0% 85%;
 }
 
 body {
@@ -185,12 +184,13 @@ nav button {
     padding: 5px;
     font-size: 0.9em !important;
     font-weight: bolder ! important;
+    z-index: 500;
 }
 
 nav button:hover {
-    background: hsl(210deg calc(var(--colorIntensity) + 10%) calc(var(--brightness) + 40%));
+    background: hsl(var(--c6));
 }
 
 nav button#closeWindow:hover {
-    background: hsl(0deg calc(var(--colorIntensity) + 40%) calc(var(--brightness) + 40%));
+    background: hsl(var(--c1));
 }

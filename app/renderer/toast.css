@@ -20,7 +20,7 @@ div#toastBarContainer:empty {
 #toastBarContainer .toast {
     display: flex;
     width: 100%;
-    max-width: 800px;
+    max-width: min(800px, calc(100vw - 2 * 8px));
     height: 100%;
     background: hsl(var(--c6));
     box-shadow: 5px 5px 11px 0px hsl(var(--c3));
@@ -39,7 +39,10 @@ div#toastBarContainer:empty {
 
 #toastBarContainer span.toastMessage {
     color: hsl(var(--c4));
-    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: auto;
+    white-space: nowrap;
 }
 
 #toastBarContainer button.toastAction {
