@@ -131,6 +131,7 @@ main {
     padding-left: 32px;
     min-height: 16px;
     word-break: break-word;
+    white-space: pre-wrap;
 }
 
 .messageContent p {

@@ -178,6 +178,7 @@ exports.getPublicKey = async user => {
 exports.getMessagesFromStorage = (chatid) => {
     return Object.values(chatDatabase[chatid].messages);
 }
+
 exports.sendMessage = async (value, chatid, quote, messageType) => {
     let msgcontent = JSON.stringify({
         value,
@@ -187,7 +188,7 @@ exports.sendMessage = async (value, chatid, quote, messageType) => {
 
     let md = forge.md.sha1.create().update(msgcontent, 'utf8');
     let signature = forge.util.bytesToHex(sk.sign(md));
-    let chatKey = await chatIdToChatKey(chatid);
+    let chatKey = await exports.chatIdToChatKey(chatid);
 
     if (!chatKey) {
         throw {
@@ -195,9 +196,9 @@ exports.sendMessage = async (value, chatid, quote, messageType) => {
         }
     }
 
-    let content = aesEncrypt([config.get("credentials:username"), msgcontent, signature, messageType ?? "text"].join("::"), chatKey);
+    let content = aesEncrypt([config.get("credentials:username"), forge.util.encodeUtf8(forge.util.bytesToHex(msgcontent)), signature, messageType ?? "text"].join("::"), chatKey);
     try {
-        let serverResponse = request("sendmessage", {
+        let serverResponse = await request("sendmessage", {
             content,
             chatid
         });
@@ -205,16 +206,86 @@ exports.sendMessage = async (value, chatid, quote, messageType) => {
             return serverResponse;
         } else {
             throw {
-                "error": serverResponse.error.description
+                "error": serverResponse.error
             }
         }
     } catch (e) {
-        throw {
+        console.log(e);
+        if (e.error) throw e
+        else throw {
             "error": "server unreachable"
         }
     }
 
 }
+exports.decryptMessage = async (encryptedContent, chatKey, message_id, chat_id, encryptionType, timestamp) => {
+    // decrypt message
+    let [sender, content, signature, messageType] = aesDecrypt(encryptedContent, chatKey).split("::");
+    try {
+
+        // decode content
+        content = forge.util.decodeUtf8(forge.util.hexToBytes(content));
+
+        // verify sender
+        let verified, decryptMsg;
+        try {
+            let publickey = await exports.getPublicKey(sender);
+            let md = forge.md.sha1.create();
+            md.update(content, 'utf8');
+            verified = publickey.verify(md.digest().bytes(), forge.util.hexToBytes(signature));
+            //                console.log(`verifying sender ${sender} returned ${verified}`);
+        } catch (e) {
+            console.log("error while verifying:", e);
+            verified = false;
+            decryptMsg = "error while verifying"
+        }
+
+
+        // parse content
+        message = JSON.parse(content);
+
+        var messageData = {
+            message_id,
+            sender,
+            verified,
+            messageType,
+            message,
+            chat_id,
+            direction: sender == config.get("credentials:username") ? "sent" : "recieved",
+            encryptionType,
+            timestamp,
+            ...decryptMsg ? {
+                decryptMsg
+            } : null
+
+        };
+
+    } catch (e) {
+        var messageData = {
+            message_id,
+            sender,
+            verified: false,
+            messageType,
+            message: {
+                value: "ERR_DECRYPT"
+            },
+            chat_id,
+            direction: sender == config.get("credentials:username") ? "sent" : "recieved",
+            encryptionType,
+            timestamp,
+            decryptMsg: "Error decrypting message"
+        };
+        console.log(e);
+    }
+    if (!chatDatabase[chat_id]) chatDatabase[chat_id] = {
+        title: undefined,
+        chatKey,
+        messages: {}
+    };
+    chatDatabase[chat_id].messages[message_id] = messageData;
+    return messageData;
+};
+
 exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
     let response = await request("getmessages", {
         chatid,
@@ -226,72 +297,7 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
     let messages = [];
     if (response.success) {
         for (var i of response.data) {
-
-            // decrypt message
-            let [sender, content, signature, messageType] = aesDecrypt(i.content, chatKey).split("::");
-            try {
-
-                // decode content
-                content = forge.util.decodeUtf8(forge.util.hexToBytes(content));
-
-
-                // verify sender
-                let verified, decryptMsg;
-                try {
-                    let publickey = await exports.getPublicKey(sender);
-                    let md = forge.md.sha1.create();
-                    md.update(content, 'utf8');
-                    verified = publickey.verify(md.digest().bytes(), forge.util.hexToBytes(signature));
-                    //                console.log(`verifying sender ${sender} returned ${verified}`);
-                } catch (e) {
-                    console.log("error while verifying:", e);
-                    verified = false;
-                    decryptMsg = "error while verifying"
-                }
-
-
-                // parse content
-                message = JSON.parse(content);
-
-                var messageData = {
-                    message_id: i.message_id,
-                    sender,
-                    verified,
-                    messageType,
-                    message,
-                    chat_id: i.chat_id,
-                    direction: sender == config.get("credentials:username") ? "sent" : "recieved",
-                    encryptionType: i.encryptionType,
-                    timestamp: i.timestamp,
-                    ...decryptMsg ? {
-                        decryptMsg
-                    } : null
-
-                };
-
-            } catch (e) {
-                var messageData = {
-                    message_id: i.message_id,
-                    sender,
-                    verified: false,
-                    messageType,
-                    message: {
-                        value: "ERR_DECRYPT"
-                    },
-                    chat_id: i.chat_id,
-                    direction: sender == config.get("credentials:username") ? "sent" : "recieved",
-                    encryptionType: i.encryptionType,
-                    timestamp: i.timestamp,
-                    decryptMsg: "Error decrypting message"
-                };
-            }
-            if (!chatDatabase[chatid]) chatDatabase[chatid] = {
-                title: undefined,
-                chatKey,
-                messages: {}
-            };
-            chatDatabase[chatid].messages[i.message_id] = messageData;
-            messages.push(messageData);
+            messages.push(await exports.decryptMessage(i.content, await exports.chatIdToChatKey(i.chat_id), i.message_id, i.chat_id, i.encryptionType, i.timestamp));
         }
         return messages;
     } else {
@@ -301,10 +307,11 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
         }
     }
 }
-
-const chatIdToChatKey = async (chatId) => {
+var chatKeyDatabase = {};
+exports.chatIdToChatKey = async (chatId) => {
+    if(chatKeyDatabase[chatId]) return chats[chatId];
     chats = await exports.getChats(true);
-    console.log(chats);
+//    console.log(chats);
     return chats[chatId];
 }
 
@@ -318,6 +325,7 @@ exports.getChats = async (chatkeysonly) => {
             let chats = {};
             for (var i in chatInformation) {
                 chats[chatInformation[i].chatId] = chatInformation[i].chatKey
+                chatKeyDatabase[chatInformation[i].chatId] = chatInformation[i].chatKey
             }
             return chats;
         } else {

@@ -378,8 +378,6 @@ class ContextMenu {
     }
 }
 
-
-// toast
 class Toast {
     constructor(message, options) {
         this.options = options ?? {};
@@ -444,7 +442,6 @@ class Toast {
         }
     }
 }
-
 
 class Popup {
     constructor(title, buttons) {

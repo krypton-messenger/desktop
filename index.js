@@ -10,6 +10,7 @@ const {
     path = require("path"),
     fs = require("fs"),
     forge = require("node-forge"),
+    WebSocket = require('ws'),
     config = require("./app/config"),
     apiConnection = require("./app/apiConnection");
 
@@ -56,6 +57,65 @@ app.on("activate", () => {
     }
 });
 
+var socket = {};
+Object.defineProperty(socket, "chats", {
+    set: value => {
+        console.log("set chats, ready = %s", socket.connection.readyState);
+        if (socket.connection.readyState == 1) {
+            for (var i of value) {
+                console.log(i.chatid);
+                socket.connection.send(JSON.stringify({
+                    action: "listen",
+                    data: [i.chatid]
+                }))
+
+            }
+        } else {
+            socket.connection.on("ready", () => {
+                socket.chats = socket.chats
+            });
+        }
+        socket._chats = value;
+    },
+    get: () => {
+        return socket._chats
+    }
+})
+const startWS = () => {
+    if (config.get("signedIn")) {
+        console.log(config.get("server"));
+        socket.connection = new WebSocket(`ws://${config.get("server").match(/:\/\/([^\/]*)(\/(.*))?/)[1]+":8080/"+config.get("server").match(/:\/\/([^\/]*)(\/(.*))?/)[2]}`);
+        console.log(socket);
+        console.log("websocket started");
+        socket.connection.on('close', () => {
+            socket.feed("message", {
+                trigger: "socket_disconnected",
+                success: false,
+                data: "Server closed websocket-connection"
+            })
+        });
+        socket.connection.on('message', msg => {
+            msg = JSON.parse(msg);
+            console.log("\n\n\nnew socket message:", msg);
+            if (msg.trigger == "newmessage") {
+                chatKey = apiConnection.chatIdToChatKey(msg.data.chatid);
+                console.log("feeding message via ipc");
+                let data  = apiConnection.decryptMessage(msg.data.content, chatKey, msg.data.message_id, msg.data.chat_id, msg.data.encryptionType, msg.data.timestamp);
+                data.encryptionType =msg.data.encType;
+                        data.timestamp = msg.data.sendtime;
+                socket.feed("message", {
+                    trigger: "socket_message",
+                    data: [data]
+                })
+            }
+        });
+        socket.chats = socket.chats;
+    } else {
+        console.log("skipped startWS because user is not signed in");
+    }
+}
+startWS();
+
 ipcMain.on("message", async (event, arg) => {
     switch (arg.command) {
         case "sendmessage":
@@ -65,11 +125,11 @@ ipcMain.on("message", async (event, arg) => {
                     trigger: arg.command,
                     ...await apiConnection.sendMessage(arg.data.content, arg.data.chatId, arg.data.quote)
                 });
-            }catch(e){
-                
+            } catch (e) {
+
                 event.reply("message", {
                     trigger: arg.command,
-                    success:false,
+                    success: false,
                     ...e
                 });
             }
@@ -105,6 +165,7 @@ ipcMain.on("message", async (event, arg) => {
                 });
                 setTimeout(() => {
                     win.loadFile(containingFile());
+                    startWS();
                 }, 350);
             } catch (e) {
                 console.log("failed to sign in:");
@@ -216,7 +277,9 @@ ipcMain.on("message", async (event, arg) => {
         case "chatList":
             try {
                 var contacts = await apiConnection.getChats();
-                console.log("contacts:", contacts);
+                socket.feed = event.reply;
+                socket.chats = contacts;
+
                 event.reply("message", {
                     trigger: arg.command,
                     success: true,
@@ -278,7 +341,9 @@ ipcMain.on("message", async (event, arg) => {
                 });
             }
             break;
-
+        case "connectSocket":
+            startWS();
+            break;
         default:
             console.log("unknown command " + arg.command);
             console.log(arg);
