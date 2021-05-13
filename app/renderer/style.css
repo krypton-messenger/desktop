@@ -185,6 +185,9 @@ nav button {
     font-size: 0.9em !important;
     font-weight: bolder ! important;
     z-index: 500;
+    display: flex !important;
+    align-items: center;
+    height:inherit;
 }
 
 nav button:hover {

@@ -94,15 +94,18 @@ const startWS = () => {
                 data: "Server closed websocket-connection"
             })
         });
-        socket.connection.on('message', msg => {
-            msg = JSON.parse(msg);
+        socket.connection.on('message', async msg => {
             console.log("\n\n\nnew socket message:", msg);
+            msg = JSON.parse(msg);
+            console.log("\n\n\nnew socket message (parsed):", msg);
             if (msg.trigger == "newmessage") {
-                chatKey = apiConnection.chatIdToChatKey(msg.data.chatid);
+                chatKey = await apiConnection.chatIdToChatKey(msg.data.chatid);
                 console.log("feeding message via ipc");
-                let data  = apiConnection.decryptMessage(msg.data.content, chatKey, msg.data.message_id, msg.data.chat_id, msg.data.encryptionType, msg.data.timestamp);
-                data.encryptionType =msg.data.encType;
-                        data.timestamp = msg.data.sendtime;
+                let data = await apiConnection.decryptMessage(msg.data.content, chatKey, msg.data.message_id, msg.data.chatid, msg.data.encryptionType, msg.data.timestamp);
+                data.encryptionType = msg.data.encType;
+                data.timestamp = msg.data.sendtime;
+                //                data.chat_id = msg.data.chatid;
+                console.log(socket.feed);
                 socket.feed("message", {
                     trigger: "socket_message",
                     data: [data]
@@ -207,6 +210,7 @@ ipcMain.on("message", async (event, arg) => {
                     trigger: arg.command,
                     success: true
                 });
+                socket.connection.close();
                 win.loadFile(containingFile());
             } catch (e) {
                 event.reply("message", {

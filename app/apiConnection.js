@@ -180,6 +180,9 @@ exports.getMessagesFromStorage = (chatid) => {
 }
 
 exports.sendMessage = async (value, chatid, quote, messageType) => {
+    if (!value.length) throw {
+        "error": "Can't send empty message"
+    }
     let msgcontent = JSON.stringify({
         value,
         quote
@@ -196,11 +199,12 @@ exports.sendMessage = async (value, chatid, quote, messageType) => {
         }
     }
 
-    let content = aesEncrypt([config.get("credentials:username"), forge.util.encodeUtf8(forge.util.bytesToHex(msgcontent)), signature, messageType ?? "text"].join("::"), chatKey);
+    let content = aesEncrypt([config.get("credentials:username"), forge.util.bytesToHex(forge.util.encodeUtf8(msgcontent)), signature, messageType ?? "text"].join("::"), chatKey);
     try {
         let serverResponse = await request("sendmessage", {
             content,
-            chatid
+            chatid,
+            encType: "RSA-AES_CBC"
         });
         if (serverResponse.success) {
             return serverResponse;
@@ -309,9 +313,9 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
 }
 var chatKeyDatabase = {};
 exports.chatIdToChatKey = async (chatId) => {
-    if(chatKeyDatabase[chatId]) return chats[chatId];
+    if (chatKeyDatabase[chatId]) return chats[chatId];
     chats = await exports.getChats(true);
-//    console.log(chats);
+    //    console.log(chats);
     return chats[chatId];
 }
 

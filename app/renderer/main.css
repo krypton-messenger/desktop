@@ -84,8 +84,8 @@ main {
     content: attr(data-timestamp-hours) ":"attr(data-timestamp-minutes);
     position: absolute;
     bottom: 0;
-    right: 0;
-    padding: 1px 5px;
+    right: calc(1em + 5px);
+    margin: 1px 5px;
     font-size: smaller;
 }
 
@@ -93,6 +93,71 @@ main {
     background: hsla(var(--c1));
     align-self: flex-end;
     border-top-right-radius: 0px;
+}
+
+.messageQuoteContainer {
+    display: block;
+    padding: 8px;
+    padding-left: 32px;
+    background: hsl(var(--c6));
+    display: grid;
+    grid-gap: 5px;
+}
+
+.sent.message .messageQuoteContainer {
+    border-radius: 5px 0 0 5px;
+}
+
+.recieved.message .messageQuoteContainer {
+    border-radius: 0 0 0 5px;
+    position: relative;
+}
+
+.recieved.message .messageQuoteContainer::before {
+    border-color: hsla(var(--c6));
+    border-left-color: transparent !important;
+    transform: translate(-100%, 0);
+    top: 0;
+    left: 0;
+}
+
+.messageQuoteContainer ~ .messageContent {
+    padding-left: 8px;
+}
+
+span.quoteSender::after {
+    content: ":";
+}
+
+span.quoteSender::before {
+    content: "reply";
+    font-family: 'Material Icons';
+    font-size: 1em;
+}
+
+span.quoteContent {
+    color: hsla(var(--c1));
+}
+
+span.quoteSender {
+    color: hsla(var(--c4));
+}
+
+.messageQuote {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-gap: 5px;
+}
+
+.messageSendState {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 1em;
+    width: 1em;
+    margin: 3px 5px;
+    font-size: smaller;
+    user-select: none;
 }
 
 .recieved.message::before {
@@ -109,13 +174,34 @@ main {
 }
 
 .recieved.message::before,
-.sent.message::before {
+.sent.message::before,
+.recieved.message .messageQuoteContainer::before {
     content: "";
     border-width: 7px;
     border-style: solid;
     border-bottom-color: transparent !important;
     border-radius: 0;
     position: absolute;
+}
+
+.socket_message_introTransition {
+    transform: translateY(100%);
+    opacity: 0;
+    animation-name: socket_message_introTransition;
+    animation-duration: 0.33s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes socket_message_introTransition {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0%);
+        opacity: 1;
+    }
 }
 
 #messageContainer {
@@ -332,6 +418,19 @@ span.fileSize {
     width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+.messagePreview::before {
+    font-family: 'Material Icons';
+    font-size: 1.5em;
+}
+
+.sent.messagePreview::before {
+    content: "arrow_forward";
+}
+
+.recieved.messagePreview::before {
+    content: "arrow_back";
 }
 
 #searchBar {

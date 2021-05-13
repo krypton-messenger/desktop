@@ -154,7 +154,10 @@
                 case "NumpadEnter":
                 case "Space":
                     if (e.target.type != "textarea" && e.target.type != "input") e.target.click();
-                    else if (e.target.type == "textarea" && e.ctrlKey) sendMessage();
+                    else if (e.target.type == "textarea" && !e.shiftKey && e.key=="Enter") {
+                        sendMessage()
+                        e.preventDefault();
+                    };
             }
         }
         const clearSearchInput = () => {
@@ -168,6 +171,7 @@
                 content: document.getElementById("messageContent").value,
                 chatId: document.querySelector(".selected.chatContainer").dataset.chatid
             });
+            document.getElementById("messageContent").value = "";
         }
         const noImplementation = serverside => {
             new Toast("This feature has not yet been implemented" + (serverside ? " on the server" : " on the client"), {
@@ -262,8 +266,9 @@
                     var messageComment = document.createElement("div");
                     messageComment.innerHTML = "March 12";
                     messageComment.classList.add("messageComment");
+                    console.log("sample message", response.data[0]);
                     for (var i of response.data) {
-                        if (!document.querySelector('[data-message-id="' + i.message_id + '"]') && i.chat_id == document.querySelector(".selected.chatContainer").dataset.chatid) document.getElementById("messageContainer").appendChild(new MessageElement(i).container);
+                        if (!document.querySelector('[data-message-id="' + i.message_id + '"]') && i.chat_id == document.querySelector(".selected.chatContainer").dataset.chatid) new MessageElement(i, "getmessages").append();
                     }
 
                     document.getElementById("messageView").classList.remove("loading");
@@ -342,8 +347,11 @@
                     });
                     break;
                 case "socket_message":
-                    console.log(response);
-                    new Toast("Recieved new message");
+                    for (let i of response.data) {
+                        console.log("appending message i", i)
+                        new MessageElement(i, "socket_message").append();
+                    }
+                    //                    new Toast("Recieved new message");
                     break;
                 default:
                     new Toast("Unknown action: " + response.trigger)
