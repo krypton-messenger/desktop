@@ -1,3 +1,423 @@
+const kryptonBuild = {
+    version: "Beta Version",
+    title: "Krypton Desktop"
+}
+
+class sideMenu {
+    constructor(actions) {
+        this.container = document.createElement("div");
+        this.container.classList.add("sideMenu");
+
+        this.createFocuser();
+        this.createActionButtons(actions);
+        this.createFooter();
+    }
+
+    createFocuser() {
+        this.focuser = document.createElement("div");
+        this.focuser.classList.add("sideMenuFocuser");
+        this.focuser.addEventListener("click", this.toggleSideMenu)
+
+        this.container.appendChild(this.focuser);
+    }
+
+    createActionButtons(actions) {
+        let actionContainer = document.createElement("div");
+        actionContainer.classList.add("sidemenuActions");
+
+        for (let i of actions) {
+            let button = document.createElement("button");
+            button.addEventListener("click", i.onclick);
+
+            let icon = document.createElement("span");
+            icon.classList.add("material-icons");
+            icon.appendChild(document.createTextNode(i.icon));
+            button.appendChild(icon);
+
+            button.appendChild(document.createTextNode(i.text));
+            actionContainer.appendChild(button);
+        }
+
+        this.container.appendChild(actionContainer);
+    }
+    createFooter() {
+        let footerContainer = document.createElement("div");
+        footerContainer.classList.add("sideMenuFooter");
+
+        let titleSpan = document.createElement("span");
+        titleSpan.appendChild(document.createTextNode(kryptonBuild.title));
+        footerContainer.appendChild(titleSpan);
+
+        let versionSpan = document.createElement("span");
+        versionSpan.appendChild(document.createTextNode(kryptonBuild.version));
+        footerContainer.appendChild(versionSpan);
+
+        let themeToggler = document.createElement("button");
+        themeToggler.addEventListener("click", toggleTheme);
+        themeToggler.classList.add("toggleUI")
+        footerContainer.appendChild(themeToggler)
+
+        let brightnessIcon = document.createElement("span");
+        brightnessIcon.classList.add("material-icons");
+        brightnessIcon.appendChild(document.createTextNode("brightness_high"));
+        themeToggler.appendChild(brightnessIcon);
+
+    }
+    open() {
+        this.container.classList.add("open");
+    }
+
+    close() {
+        this.container.classList.remove("open");
+    }
+
+    toggleSideMenu() {
+        this.container.classList.toggle("open");
+    }
+}
+
+class chatView {
+    constructor(mainInstance, chats) {
+        this.mainInstance = mainInstance;
+        this.container = document.createElement("div");
+        this.container.classList.add("chatView");
+
+        this.createSearchBar();
+
+        this.chatList = document.createElement("div");
+        this.chatList.classList.add("chatList");
+
+        this.chatTiles = chats ?? [];
+    }
+
+    createSearchBar() {
+        let container = document.createElement("div");
+        container.classList.add("searchBar");
+
+
+        container.appendChild(
+            new materialIconButton("menu", this.mainInstance.sideMenu.open, "open menu")
+        );
+
+        let searchInputContainer = document.createElement("div");
+        searchInputContainer.classList.add("searchInputContainer");
+        container.appendChild(searchInputContainer);
+
+        let searchInput = document.createElement("input");
+        searchInput.classList.add("searchInput");
+        searchInput.setAttribute("placeholder", "Search");
+        searchInput.setAttribute("type", "text");
+        searchInputContainer.appendChild(searchInput);
+        this.searchInput = searchInput;
+
+        let clearSearchInput = new materialIconButton("close", this.clearSearchInput, "clear search");
+        clearSearchInput.classList.add("clearSearchInput");
+        searchInputContainer.appendChild(clearSearchInput);
+
+        container.appendChild(
+            new materialIconButton("search", this.openSearchBar, "search")
+        );
+        this.container.appendChild(container);
+
+    }
+    clearSearchInput() {
+        this.searchInput.value = "";
+        this.searchInput.blur();
+    }
+    openSearchBar() {
+        this.searchInput.focus();
+    }
+    set chatTiles(value) {
+        this._chatTiles = value;
+        for (let i of value) {
+            let chatTile = new ChatTile(i);
+            this._chatTiles.push(chatTile);
+            this.chatList.appendChild(chatTile);
+        }
+    }
+    sortChatTiles() {
+        for (let i of [].slice.call(this.chatTiles).sort(
+                (a, b) => {
+                    return b.lastMessageDate - a.lastMessageDate
+                }
+            )) {
+            this.container.appendChild(i);
+        }
+    }
+
+    deselectAll() {
+        for (let i of this.chatTiles) {
+            i.deselect();
+        }
+    }
+
+    get chatTiles() {
+        return this._chatTiles;
+    }
+}
+
+class materialIconButton {
+    constructor(iconName, onclick, title) {
+        this.button = document.createElement("button");
+        this.button.addEventListener("click", noImplementation);
+        this.button.addEventListener("click", onclick);
+        this.button.setAttribute("title", title);
+        this.button.instance = this;
+
+        this.icon = document.createElement("i");
+        this.icon.classList.add("material-icons");
+        this.icon.appendChild(document.createTextNode(iconName));
+        this.button.appendChild(this.icon);
+
+        return this.button
+    }
+}
+
+class messageView {
+    constructor(mainInstance) {
+        this.mainInstance = mainInstance;
+        this.container = document.createElement("div");
+        this.container.classList.add("messageView");
+
+        this.addMessageContainer();
+        this.addContactInformation();
+        this.addMessageActionArea();
+        this.addSelectedMessageActionArea();
+    }
+
+    changeContactInformation(username) {
+        this.chatTitle.innerHTML = "";
+        this.chatTitle.appendChild(document.createTextNode(username))
+    }
+
+    addMessageContainer() {
+        let messageContainer = document.createElement("div");
+        messageContainer.classList.add("messageContainer");
+        this.container.appendChild(messageContainer);
+    }
+
+    addContactInformation() {
+        let contactInformation = document.createElement("div");
+        contactInformation.classList.add("contactInformation");
+
+        contactInformation.appendChild(
+            new materialIconButton("arrow_back", () => {
+                this.mainInstance.chatView.deselectAll()
+            }, "back")
+        );
+
+        let chatTitle = document.createElement("span");
+        chatTitle.classList.add("chatTitle");
+        contactInformation.appendChild(chatTitle);
+        this.chatTitle = chatTitle;
+
+        let chatInfo = document.createElement("span");
+        chatInfo.classList.add("chatInfo");
+
+
+        contactInformation.appendChild(
+            new materialIconButton("call", noImplementation, "call")
+        );
+
+        contactInformation.appendChild(
+            new materialIconButton("more_vert", noImplementation, "more options")
+        );
+
+        this.container.appendChild(contactInformation);
+    }
+
+    addMessageActionArea() {
+        let messageActionArea = document.createElement("div");
+        messageActionArea.classList.add("messageActionArea");
+
+        messageActionArea.appendChild(
+            new materialIconButton("attach_file", noImplementation, "attach file")
+        );
+
+
+        let messageContent = document.createElement("textarea");
+        messageContent.setAttribute("placeholder", "Write a message...");
+        messageContent.classList.add("messageContent");
+        messageActionArea.appendChild(messageContent);
+
+        messageActionArea.appendChild(
+            new materialIconButton("schedule", noImplementation, "schedule message")
+        );
+
+        messageActionArea.appendChild(
+            new materialIconButton("send", sendMessage, "send")
+        );
+        this.container.appendChild(messageActionArea);
+    }
+    addSelectedMessageActionArea() {
+        let container = document.createElement("div");
+        container.classList.add("selectedMessageActionArea");
+
+        container.appendChild(
+            new materialIconButton("arrow_back", () => {}, "back")
+        );
+
+        let selectedMessageCount = document.createElement("span");
+        selectedMessageCount.innerHTML = "0";
+        selectedMessageCount.classList.add("selectedMessageCount");
+        container.appendChild(selectedMessageCount);
+        this.selectedMessageCount = selectedMessageCount;
+
+        container.appendChild(
+            new materialIconButton("reply", noImplementation, "reply")
+        );
+
+        container.appendChild(
+            new materialIconButton("translate", noImplementation, "translate")
+        );
+
+        container.appendChild(
+            new materialIconButton("volume_up", noImplementation, "translate")
+        );
+
+        container.appendChild(
+            new materialIconButton("content_copy", noImplementation, "copy to clipboard")
+        );
+
+        container.appendChild(
+            new materialIconButton("send", noImplementation, "forward")
+        );
+        this.container.appendChild(container);
+    }
+}
+
+class main {
+    constructor(windowType) {
+        this.container = document.createElement("main");
+        this.setupWindow();
+        this.createNav();
+        switch (windowType) {
+            case this.windowTypes.mainWindow:
+                this.mainContainer = this.createMainWindowView();
+                break;
+            case this.windowTypes.loginWindow:
+                this.mainContainer = this.createLoginWindow();
+                break;
+            case this.windowTypes.signupWindow:
+                this.mainContainer = this.createSignupWindow();
+                break;
+        }
+        this.container.appendChild(this.mainContainer);
+    }
+
+    setupWindow() {
+        this.window = {};
+        this.window.minimize = () => {
+            window.ipc.send("windowStateChange", "minimize");
+        }
+        this.window.toggleMaximize = () => {
+            window.ipc.send("windowStateChange", "toggleMaximize");
+        }
+        this.window.close = () => {
+            window.ipc.send("windowStateChange", "close");
+        }
+    }
+    get windowTypes() {
+        return {
+            "loginWindow": 0,
+            "signupWindow": 1,
+            "mainWindow": 2
+        }
+    }
+
+    createNav() {
+        this.nav = {}
+        this.nav.container = document.createElement("nav");
+        this.nav.options = [{
+            class: "material-icons",
+            onclick: this.window.minimize,
+            content: "minimize"
+        }, {
+            class: "material-icons",
+            onclick: this.window.toggleMaximize,
+            content: "crop_square"
+        }, {
+            class: "material-icons",
+            onclick: this.window.close,
+            id: "closeWindow",
+            content: "close"
+        }]
+        for (let i of this.nav.options) {
+            let button = document.createElement("button");
+            button.classList.add(i.class);
+            button.addEventListener("click", i.onclick);
+            if (i.id) button.id = i.id;
+            button.appendChild(document.createTextNode(i.content));
+            this.nav.container.appendChild(button);
+        }
+        this.container.appendChild(this.nav.container);
+    }
+
+    createMainWindowView() {
+        let mainContainer = document.createElement("div");
+        // add a sidemenu
+        this.sideMenu = new sideMenu([{
+            onclick: noImplementation,
+            icon: "create",
+            text: "New Chat"
+            }, {
+            onclick: noImplementation,
+            icon: "group",
+            text: "New Group"
+            }, {
+            onclick: showSettings,
+            icon: "settings",
+            text: "Settings"
+            }, {
+            onclick: logout,
+            icon: "logout",
+            text: "Sign Out"
+            }, {
+            onclick: () => {
+                window.ipc.send("windowStateChange", "openDebug");
+            },
+            icon: "code",
+            text: "Debug"
+            }]);
+        mainContainer.appendChild(this.sideMenu.container);
+
+        this.messageView = new messageView(this);
+        mainContainer.appendChild(this.messageView.container);
+
+        this.chatView = new chatView(this);
+        mainContainer.appendChild(this.chatView.container);
+
+        this.createToastBarContainer();
+
+        this.createPopupContainer();
+
+        return mainContainer;
+    }
+
+    createToastBarContainer() {
+        let container = document.createElement("div")
+        container.setAttribute("id", "toastBarContainer");
+        this.container.appendChild(container);
+    }
+    createPopupContainer() {
+        let container = document.createElement("div")
+        container.setAttribute("id", "popupContainer");
+        this.container.appendChild(container);
+    }
+
+    createLoginWindow() {
+        let mainContainer = document.createElement("div");
+        return mainContainer;
+
+    }
+
+    createSignupWindow() {
+        let mainContainer = document.createElement("div");
+        return mainContainer;
+    }
+
+}
+
 class ChatTile {
     constructor(data) {
         if (data) {
@@ -127,7 +547,13 @@ class MessageElement {
             this.sendState = data.sendState ?? true;
         }
     }
-
+    reply() {
+        return {
+            "messageId": this.data.message_id,
+            "text": this.data.message.value,
+            "username": this.data.sender
+        }
+    }
 
     set sendState(value) {
         this._sendState = {};
@@ -179,8 +605,8 @@ class MessageElement {
         this.container.addEventListener("contextmenu", e => {
             new ContextMenu(e, [{
                 label: "Reply",
-                callback: console.log,
-                disabled: true
+                callback: this.reply,
+                disabled: false
                 }, {
                 label: "Select",
                 callback: (e, obj) => {
