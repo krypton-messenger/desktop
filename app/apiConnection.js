@@ -363,3 +363,48 @@ exports.getProfilePicture = async username => {
         throw response;
     }
 };
+exports.search = {};
+exports.search.messages = query => {
+    return [{
+        "message_id": 1,
+        "sender": "tim",
+        "verified": true,
+        "messageType": "text",
+        "message": {
+            "value": "hello"
+        },
+        "chat_id": "d6b1a5a8f03f18ce0b2670ea89dd2854a1e6101a8cb11e28810b973e495a14d9e1c89100f82edf4a65162e21471d94e0bee1a8e9e3fc823aaf9b58f5116cd2a8",
+        "direction": "sent",
+        "encryptionType": "RSA-AES_CBC",
+        "timestamp": "2021-05-21T10:09:11.686Z"
+    }];
+};
+exports.search.chats = query => {
+    return [{
+        "username": "tim",
+        "profilePicture": null,
+        "lastMessage": {
+            "message_id": 1,
+            "sender": "tim",
+            "verified": true,
+            "messageType": "text",
+            "message": {
+                "value": "hello"
+            },
+            "chat_id": "d6b1a5a8f03f18ce0b2670ea89dd2854a1e6101a8cb11e28810b973e495a14d9e1c89100f82edf4a65162e21471d94e0bee1a8e9e3fc823aaf9b58f5116cd2a8",
+            "direction": "sent",
+            "encryptionType": "RSA-AES_CBC",
+            "timestamp": "2021-05-21T10:09:11.686Z"
+        },
+        "chatid": "d6b1a5a8f03f18ce0b2670ea89dd2854a1e6101a8cb11e28810b973e495a14d9e1c89100f82edf4a65162e21471d94e0bee1a8e9e3fc823aaf9b58f5116cd2a8",
+        "chatKey": "Oû),|ùO0NçSÄ.@xÞ¿>({i¸Ig÷%§ÂM¾²ÜUòGb+Ö­\b$dz¾8c7<+µªïj	®if®?Ý«(×1øßÀ=%B)Ü¤/%¨ÐÔ#D.!« Ëôsc¦¶ÿx=¾.áñôt³6hÃbJºoóü¸»¼áLÝswF¥;8p!aÙiÕ9-¾ù`¼RV	TOã[åQëß¨fâU]Ä'I"
+    }];
+};
+exports.search.users = query => {
+    return [
+        {
+            "username": "tim",
+            "profilePicture": null
+        }
+    ];
+};

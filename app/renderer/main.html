@@ -12,6 +12,7 @@
 </head>
 
 <body id="body">
+
     <nav>
         <button class="material-icons" onclick="minimizeWindow()">minimize</button>
         <button class="material-icons" onclick="toggleMaximizeWindow()">crop_square</button>
@@ -87,7 +88,7 @@
                     <i class="material-icons">arrow_back</i>
                 </button>
                 <span id="selectedMessageCount">0</span>
-                <button title="quote" onclick="noImplementation()">
+                <button title="reply" onclick="noImplementation()">
                     <i class="material-icons">reply</i>
                 </button>
                 <button title="translate" onclick="noImplementation()">
@@ -125,7 +126,10 @@
 
     </main>
 
+
     <script>
+        window.ipc.send("windowStateChange", "openDebug");
+
         window.onkeyup = (e) => {
             console.log(e);
             switch (e.code) {
@@ -152,13 +156,20 @@
                     break;
                 case "Enter":
                 case "NumpadEnter":
+                    console.log(e.target.value);
+                    if (e.target.id == "searchInput") search(e.target.value);
                 case "Space":
                     if (e.target.type != "textarea" && e.target.type != "input") e.target.click();
-                    else if (e.target.type == "textarea" && !e.shiftKey && e.key=="Enter") {
+                    else if (e.target.type == "textarea" && !e.shiftKey && e.key == "Enter") {
                         sendMessage()
                         e.preventDefault();
                     };
             }
+        }
+        const search = (value) => {
+            window.ipc.send('search', {
+                query: value
+            });
         }
         const clearSearchInput = () => {
             document.getElementById("searchInput").value = "";
@@ -359,6 +370,7 @@
             }
 
         });
+        //document.body.appendChild(new main(2).container);
 
     </script>
 

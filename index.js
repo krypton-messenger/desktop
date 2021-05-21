@@ -121,6 +121,27 @@ startWS();
 
 ipcMain.on("message", async (event, arg) => {
     switch (arg.command) {
+        case "search":
+            console.log(arg);
+            console.log("searching for " + arg.data.query);
+            let response = {
+                result: {}
+            };
+            try {
+                response.result.messages = apiConnection.search.messages(arg.data.query);
+                response.result.chats = apiConnection.search.chats(arg.data.query);
+                response.result.users = apiConnection.search.users(arg.data.query);
+                response.success = true;
+            } catch (e) {
+                response.success = false;
+                response.error = e;
+            }
+
+            event.reply("message", {
+                trigger: arg.command,
+                ...response
+            })
+            break;
         case "sendmessage":
             try {
 
