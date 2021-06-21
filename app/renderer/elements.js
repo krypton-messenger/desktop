@@ -991,7 +991,10 @@ class Popup {
         if (value.okButton) {
             this._buttons.okButton = {
                 label: value.okButton.label,
-                callback: value.okButton.callback ?? this.remove,
+                callback: value.okButton.callback ? () => {
+                    value.okButton.callback();
+                    this.remove();
+                } : this.remove,
                 elmt: document.createElement("button")
             }
             this._buttons.okButton.elmt.appendChild(document.createTextNode(this._buttons.okButton.label));
@@ -1018,7 +1021,7 @@ class Popup {
 
         } else {
             this.container.parentElement.removeChild(this.container);
-            document.getElementById("popupContainer").removeEventListener("click", popup.removeViaContainer);
+            document.getElementById("popupContainer").removeEventListener("click", this.removeViaContainer);
         }
     }
 

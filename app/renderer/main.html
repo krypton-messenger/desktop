@@ -24,7 +24,7 @@
 
             <div id="sideMenuActions">
 
-                <button onclick="noImplementation()">
+                <button onclick="createChat()">
                     <span class="material-icons">create</span>
                     New Chat
                 </button>
@@ -166,6 +166,25 @@
                     };
             }
         }
+
+        const createChat = () => {
+            let usernameSelector = document.createElement("input");
+            usernameSelector.placeholder = "enter username";
+            let chatPopup;
+            chatPopup = new Popup(usernameSelector, {
+                cancel: true,
+                okButton: {
+                    label: "Create Chat",
+                    callback: () => {
+                        let username = usernameSelector.value;
+                        ipc.send("createChat", {
+                            username
+                        });
+                    }
+                }
+            }).show();
+        }
+
         const search = (value) => {
             window.ipc.send('search', {
                 query: value
@@ -364,6 +383,15 @@
                     }
                     //                    new Toast("Recieved new message");
                     break;
+                case "search":
+                    console.log(response.data.result);
+                    break;
+                case "createChat":
+                    if (!response.success) new Toast(response.data, {
+                        timer: 2000
+                    });
+                    break;
+
                 default:
                     new Toast("Unknown action: " + response.trigger)
                     break;

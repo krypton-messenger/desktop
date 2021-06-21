@@ -60,18 +60,18 @@ app.on("activate", () => {
 var socket = {};
 Object.defineProperty(socket, "chats", {
     set: value => {
-        console.log("set chats, ready = %s", socket.connection.readyState);
-        if (socket.connection.readyState == 1) {
+        console.log("set chats, ready = %s", socket.anonymousConnection.readyState);
+        if (socket.anonymousConnection.readyState == 1) {
             for (var i of value) {
                 console.log(i.chatid);
-                socket.connection.send(JSON.stringify({
+                socket.anonymousConnection.send(JSON.stringify({
                     action: "listen",
                     data: [i.chatid]
-                }))
+                }));
 
             }
         } else {
-            socket.connection.on("ready", () => {
+            socket.anonymousConnection.on("ready", () => {
                 socket.chats = socket.chats
             });
         }
@@ -81,20 +81,21 @@ Object.defineProperty(socket, "chats", {
         return socket._chats
     }
 })
-const startWS = () => {
+
+const startAnonymousWebSocket = () => {
     if (config.get("signedIn")) {
         console.log(config.get("server"));
-        socket.connection = new WebSocket(`ws://${config.get("server").match(/:\/\/([^\/]*)(\/(.*))?/)[1]+":8080/"+config.get("server").match(/:\/\/([^\/]*)(\/(.*))?/)[2]}`);
+        socket.anonymousConnection = new WebSocket(`ws://${config.get("server").match(/:\/\/([^\/]*)(\/(.*))?/)[1]+":8080/"+config.get("server").match(/:\/\/([^\/]*)(\/(.*))?/)[2]}`);
         console.log(socket);
-        console.log("websocket started");
-        socket.connection.on('close', () => {
+        console.log("anonymous websocket started");
+        socket.anonymousConnection.on('close', () => {
             socket.feed("message", {
                 trigger: "socket_disconnected",
                 success: false,
-                data: "Server closed websocket-connection"
+                data: "Server closed anonymous websocket-connection"
             })
         });
-        socket.connection.on('message', async msg => {
+        socket.anonymousConnection.on('message', async msg => {
             console.log("\n\n\nnew socket message:", msg);
             msg = JSON.parse(msg);
             console.log("\n\n\nnew socket message (parsed):", msg);
@@ -114,10 +115,48 @@ const startWS = () => {
         });
         socket.chats = socket.chats;
     } else {
-        console.log("skipped startWS because user is not signed in");
+        console.log("skipped startAnonymousWebSocket because user is not signed in");
     }
 }
-startWS();
+startAnonymousWebSocket();
+
+const startAuthenticatedWebSocket = () => {
+    if (config.get("signedIn")) {
+        console.log(config.get("server"));
+        socket.authenticatedConnection = new WebSocket(`ws://${config.get("server").match(/:\/\/([^\/]*)(\/(.*))?/)[1]+":8080/"+config.get("server").match(/:\/\/([^\/]*)(\/(.*))?/)[2]}`);
+        console.log(socket);
+        console.log("authenticated websocket started");
+        socket.authenticatedConnection.on("close", () => {
+            socket.feed("message", {
+                trigger: "socket_disconnected",
+                success: false,
+                data: "Server closed authenticated websocket-connection"
+            })
+        });
+        socket.authenticatedConnection.on("message", async msg => {
+            console.log("new authsocket message:", msg);
+            msg = JSON.parse(msg);
+            console.log("new authsocket message (parsed):", msg);
+            switch (msg.trigger) {
+                case "newchatkey":
+                    // handle new chat key
+                    break;
+                case "notAuthenticated":
+                    // re-auth
+                    break;
+            }
+        });
+        socket.authenticatedConnection.on("ready", () => {
+            socket.authenticatedConnection.send({
+                action: "authenticate",
+                data: {
+                    authToken: config.get("credentials:authToken"),
+                    username: config.get("credentials:username")
+                }
+            });
+        })
+    }
+};
 
 ipcMain.on("message", async (event, arg) => {
     switch (arg.command) {
@@ -189,7 +228,7 @@ ipcMain.on("message", async (event, arg) => {
                 });
                 setTimeout(() => {
                     win.loadFile(containingFile());
-                    startWS();
+                    startAnonymousWebSocket();
                 }, 350);
             } catch (e) {
                 console.log("failed to sign in:");
@@ -231,7 +270,7 @@ ipcMain.on("message", async (event, arg) => {
                     trigger: arg.command,
                     success: true
                 });
-                socket.connection.close();
+                socket.anonymousConnection.close();
                 win.loadFile(containingFile());
             } catch (e) {
                 event.reply("message", {
@@ -366,9 +405,19 @@ ipcMain.on("message", async (event, arg) => {
                 });
             }
             break;
+
         case "connectSocket":
-            startWS();
+            startAnonymousWebSocket();
             break;
+            
+        case "createChat":
+            event.reply("message", {
+                trigger: arg.command,
+                success: false,
+                data: "Username doesn't exist"
+            });
+            break;
+            
         default:
             console.log("unknown command " + arg.command);
             console.log(arg);

@@ -1,6 +1,7 @@
 @import "toast.css";
 @import "contextmenu.css";
 @import "popup.css";
+@import "input.css";
 
 :root {
     --h: 168deg;

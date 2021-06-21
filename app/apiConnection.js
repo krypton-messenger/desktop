@@ -318,6 +318,9 @@ exports.chatIdToChatKey = async (chatId) => {
     //    console.log(chats);
     return chats[chatId];
 }
+exports.usernameToChatKey = async (username)=>{
+    
+}
 
 exports.getChats = async (chatkeysonly) => {
     let response = await request("getchatkeys", {
@@ -325,6 +328,7 @@ exports.getChats = async (chatkeysonly) => {
     });
     if (response.success) {
         let chatInformation = response.data == null ? {} : JSON.parse(aesDecrypt(response.data, config.get("credentials:password:sha256")));
+        console.log("chatinfo", chatInformation);
         if (chatkeysonly) {
             let chats = {};
             for (var i in chatInformation) {
