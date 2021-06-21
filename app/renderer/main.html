@@ -145,8 +145,10 @@
                         case "body":
                         case "menuOpener":
                             if (document.getElementById('sideMenu').classList.contains("open")) toggleSideMenu()
-                            else if (document.querySelector(".contextMenu")) new ContextMenu().removeAllContextMenus()
-                            else if (document.querySelector(".selected.message")) document.querySelector(".selected.message").messageElement.deselectAll();
+                            else if (document.querySelector(".contextMenu")) new ContextMenu()
+                                .removeAllContextMenus()
+                            else if (document.querySelector(".selected.message")) document.querySelector(
+                                ".selected.message").messageElement.deselectAll();
                             else new ChatTile().deselectAll();
                             break;
 
@@ -204,7 +206,8 @@
             document.getElementById("messageContent").value = "";
         }
         const noImplementation = serverside => {
-            new Toast("This feature has not yet been implemented" + (serverside ? " on the server" : " on the client"), {
+            new Toast("This feature has not yet been implemented" + (serverside ? " on the server" :
+                " on the client"), {
                 timer: 2000
             });
         }
@@ -252,7 +255,7 @@
                 if (data.class) elmt.classList.add(...data.class);
                 if (data.onclick) elmt.onclick = data.onclick;
                 for (var i of data.content ?? []) {
-                    if (typeof(i) == "string") elmt.appendChild(document.createTextNode(i));
+                    if (typeof (i) == "string") elmt.appendChild(document.createTextNode(i));
                     else elmt.appendChild(createItemElement(i));
                 }
                 return elmt;
@@ -298,7 +301,9 @@
                     messageComment.classList.add("messageComment");
                     console.log("sample message", response.data[0]);
                     for (var i of response.data) {
-                        if (!document.querySelector('[data-message-id="' + i.message_id + '"]') && i.chat_id == document.querySelector(".selected.chatContainer").dataset.chatid) new MessageElement(i, "getmessages").append();
+                        if (!document.querySelector('[data-message-id="' + i.message_id + '"]') && i
+                            .chat_id == document.querySelector(".selected.chatContainer").dataset.chatid)
+                            new MessageElement(i, "getmessages").append();
                     }
 
                     document.getElementById("messageView").classList.remove("loading");
@@ -307,6 +312,7 @@
                     break;
 
                 case "chatList":
+                    console.log(response);
                     console.log("recieved contact list");
                     if (!response.success) {
                         new Toast(response.error.description, {
@@ -321,7 +327,8 @@
                         });
                         return
                     }
-                    if (response.data.length == 0) document.getElementById("chatList").classList.add("noEntries");
+                    if (response.data.length == 0) document.getElementById("chatList").classList.add(
+                        "noEntries");
                     else document.getElementById("chatList").classList.remove("noEntries");
 
                     for (var i of response.data) {
@@ -347,8 +354,10 @@
                         });
                         return
                     }
-                    document.getElementById("ownUserName").appendChild(document.createTextNode("@" + response.data.username));
-                    if (response.data.profilePictureURI) document.getElementById("ownProfile").style.setProperty("--profilePicture", "url(" + response.data.profilePictureURI + ")");
+                    document.getElementById("ownUserName").appendChild(document.createTextNode("@" +
+                        response.data.username));
+                    if (response.data.profilePictureURI) document.getElementById("ownProfile").style
+                        .setProperty("--profilePicture", "url(" + response.data.profilePictureURI + ")");
                     break;
 
                 case "downloadFile":
@@ -387,9 +396,17 @@
                     console.log(response.data.result);
                     break;
                 case "createChat":
-                    if (!response.success) new Toast(response.data, {
-                        timer: 2000
-                    });
+                    if (!response.success) {
+                        try {
+                            document.querySelector(`[data-chatid='${response.chatId}']`).click();
+                            document.getElementById('sideMenu').classList.remove('open');
+                        } catch (_e) {
+                            new Toast(response.data ?? response.error ? response.error.description :
+                                "Error creating chat", {
+                                    timer: 2000
+                                });
+                        }
+                    }
                     break;
 
                 default:
@@ -399,7 +416,6 @@
 
         });
         //document.body.appendChild(new main(2).container);
-
     </script>
 
 

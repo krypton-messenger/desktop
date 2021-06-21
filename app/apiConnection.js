@@ -1,3 +1,6 @@
+const {
+    exception
+} = require("console");
 const config = require("./config"),
     forge = require("node-forge"),
     fs = require("fs"),
@@ -62,14 +65,72 @@ const aesEncrypt = (message, password, numIterations) => {
     cipher.finish();
 
     return [forge.util.bytesToHex(iv),
-            numIterations,
-            forge.util.bytesToHex(salt),
-            cipher.output.toHex(),
-           ].join("$");
+        numIterations,
+        forge.util.bytesToHex(salt),
+        cipher.output.toHex(),
+    ].join("$");
 
 };
+const removeFromChatKeyInbox = async (entries) => {
+    let response = await request("removechatkey", {
+        username: config.get("credentials:username"),
+        content: entries
+    });
+    if(response.success){
+        return true;
+    }else{
+        throw response.error;
+    }
+}
 
+const getChatKeyInbox = async () => {
+    let response = await request("getchatkeyinbox", {
+        username: config.get("credentials:username")
+    });
+    if (response.success) {
+        for (let i of JSON.parse(response.data)) {
+            let [encryptedUsername, encryptedChatKey, signature] = i.split("::");
+            // console.log([encryptedUsername, encryptedChatKey, signature] );
+            let sk = getOwnPrivateKey();
+            let decryptedChatKey = sk.decrypt(forge.util.hexToBytes(encryptedChatKey));
+            let decryptedUsername = sk.decrypt(forge.util.hexToBytes(encryptedUsername));
 
+            let sendersPublicKey = await this.getPublicKey(decryptedUsername);
+            let md = forge.md.sha1.create();
+            md.update(decryptedChatKey, 'utf8');
+            if (!sendersPublicKey.verify(md.digest().bytes(), forge.util.hexToBytes(signature))) break; // brutally skip entry if signature can't be verifyed
+            else if (this.knowsUsername(decryptedUsername)) break; // skip entry if there is allready a chat with this person
+            else {
+                updateOwnChatKeys(decryptedUsername, decryptedChatKey, forge.md.sha512.create().update(decryptedChatKey).digest().toHex());
+            }
+        }
+        removeFromChatKeyInbox(response.data);
+    }
+};
+let chatKeyListening;
+exports.startChatKeyListener = async () => {
+    if (chatKeyListening) return;
+    chatKeyListening = true;
+    while (config.get("signedIn")) {
+        getChatKeyInbox();
+        try {
+            console.warn("started chatkeylistener")
+            // promise will be resolved as soon as the server times out or new chatkey is here
+            await request("awaitchatkeyinbox", {
+                username: config.get("credentials:username")
+            });
+        } catch (_e) {
+            await (() => {
+                return new Promise((resolve, _reject) => {
+                    console.log("chatkey listener failed, retrying in 2s...");
+                    setTimeout(() => {
+                        resolve();
+                    }, 2000);
+                });
+            })();
+        }
+    }
+}
 
 exports.setCredentials = (serverurl, username, password, guest) => {
     return new Promise(async (resolve, reject) => {
@@ -96,6 +157,7 @@ exports.setCredentials = (serverurl, username, password, guest) => {
             config.set("credentials:publicKey:encrypted", response.data.publicKey);
             config.set("signedIn", "true");
             config.setAndSave("credentials:authToken", response.data.token);
+            this.startChatKeyListener();
         } else {
             reject(response);
         }
@@ -142,7 +204,7 @@ exports.createAccount = (serverurl, username, password, licenceKey, guest) => {
                 });
 
                 if (response.success) {
-                    exports.setCredentials(serverurl, username, password.plain, guest).then((result) => {
+                    this.setCredentials(serverurl, username, password.plain, guest).then((result) => {
                         resolve(result);
                     });
                 } else {
@@ -155,6 +217,84 @@ exports.createAccount = (serverurl, username, password, licenceKey, guest) => {
 
     });
 };
+
+const getChatKeys = async () => {
+    let response = await request("getchatkeys", {
+        username: config.get("credentials:username")
+    });
+    if (response.success) {
+        // {username:{chatId, chatKey}}
+        console.log(!!response.data);
+        let chatInformation = !response.data ? {} : JSON.parse(aesDecrypt(response.data, config.get("credentials:password:sha256")));
+        // add data to local db
+        for (let i in chatInformation) {
+            chatKeyDatabase[chatInformation[i].chatKey] = {
+                username: i,
+                chatId: chatInformation[i].chatId
+            };
+            chatIdDatabase[chatInformation[i].chatId] = {
+                username: i,
+                chatKey: chatInformation[i].chatKey
+            };
+            usernameDatabase[i] = {
+                chatKey: chatInformation[i].chatKey,
+                chatId: chatInformation[i].chatId
+            };
+        }
+        return chatInformation;
+    } else {
+        throw response
+    }
+}
+
+const updateOwnChatKeys = async (username, chatKey, chatId) => {
+    let chatKeys = getChatKeys();
+    chatKeys[username] = {
+        chatKey,
+        chatId
+    };
+    let data = aesEncrypt(JSON.stringify(chatKeys), config.get("credentials:password:sha256"));
+    // auth???
+    console.log("updating chat keys");
+    let result = await request("updateChatKeys", {
+        content: data,
+        username: config.get("credentials:username")
+    });
+    if (result.success) return true;
+    else throw result;
+}
+
+exports.createChat = async targetUser => {
+    if (this.knowsUsername(targetUser)) return false;
+    else {
+        let chatKey = await forge.random.getBytes(200);
+
+        let recieverPublickey = await this.getPublicKey(targetUser);
+        let encryptedChatKey = forge.util.bytesToHex(recieverPublickey.encrypt(chatKey));
+        let encryptedOwnUsername = forge.util.bytesToHex(recieverPublickey.encrypt(config.get("credentials:username")));
+        let ownPrivateKey = getOwnPrivateKey();
+        let md = forge.md.sha1.create();
+        md.update(chatKey, 'utf8');
+        let signature = forge.util.bytesToHex(ownPrivateKey.sign(md));
+
+        var encryptedBundle = [encryptedOwnUsername, encryptedChatKey, signature].join("::");
+        let response = await request("addchatkey", {
+            user: targetUser,
+            content: encryptedBundle
+        });
+
+        if (response.success) {
+            let chatId = forge.md.sha512.create().update(chatKey).digest().toHex()
+            updateOwnChatKeys(targetUser, chatKey, chatId);
+            return true;
+        } else {
+            throw {
+                success: false,
+                data: response.error.description
+            };
+        }
+    }
+}
 
 var cache = {};
 exports.getPublicKey = async user => {
@@ -178,7 +318,9 @@ exports.getPublicKey = async user => {
 exports.getMessagesFromStorage = (chatid) => {
     return Object.values(chatDatabase[chatid].messages);
 }
-
+const getOwnPrivateKey = () => {
+    return forge.pki.decryptRsaPrivateKey(config.get("credentials:privateKey:encrypted"), config.get("credentials:password:sha256"));
+}
 exports.sendMessage = async (value, chatid, quote, messageType) => {
     if (!value.length) throw {
         "error": "Can't send empty message"
@@ -187,11 +329,11 @@ exports.sendMessage = async (value, chatid, quote, messageType) => {
         value,
         quote
     });
-    let sk = forge.pki.decryptRsaPrivateKey(config.get("credentials:privateKey:encrypted"), config.get("credentials:password:sha256"));
+    let sk = getOwnPrivateKey();
 
     let md = forge.md.sha1.create().update(msgcontent, 'utf8');
     let signature = forge.util.bytesToHex(sk.sign(md));
-    let chatKey = await exports.chatIdToChatKey(chatid);
+    let chatKey = this.chatIdToChatKey(chatid);
 
     if (!chatKey) {
         throw {
@@ -233,7 +375,7 @@ exports.decryptMessage = async (encryptedContent, chatKey, message_id, chat_id, 
         // verify sender
         let verified, decryptMsg;
         try {
-            let publickey = await exports.getPublicKey(sender);
+            let publickey = await this.getPublicKey(sender);
             let md = forge.md.sha1.create();
             md.update(content, 'utf8');
             verified = publickey.verify(md.digest().bytes(), forge.util.hexToBytes(signature));
@@ -301,7 +443,7 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
     let messages = [];
     if (response.success) {
         for (var i of response.data) {
-            messages.push(await exports.decryptMessage(i.content, await exports.chatIdToChatKey(i.chat_id), i.message_id, i.chat_id, i.encryptionType, i.timestamp));
+            messages.push(await this.decryptMessage(i.content, chatKey, i.message_id, i.chat_id, i.encryptionType, i.timestamp));
         }
         return messages;
     } else {
@@ -312,48 +454,71 @@ exports.getMessages = async (chatid, chatKey, limit, offset, desc) => {
     }
 }
 var chatKeyDatabase = {};
-exports.chatIdToChatKey = async (chatId) => {
-    if (chatKeyDatabase[chatId]) return chats[chatId];
-    chats = await exports.getChats(true);
-    //    console.log(chats);
-    return chats[chatId];
+var usernameDatabase = {};
+var chatIdDatabase = {};
+// exports.chatIdToChatKey = async (chatId) => {
+//     if (chatKeyDatabase[chatId]) return chats[chatId];
+//     chats = await this.getChats(true);
+//     //    console.log(chats);
+//     return chats[chatId];
+// }
+exports.knowsUsername = (username) => {
+    console.log(`checking for username ${username}`);
+    return usernameDatabase[username] !== undefined;
 }
-exports.usernameToChatKey = async (username)=>{
-    
+exports.chatIdToChatKey = (chatId) => {
+    if (chatIdDatabase[chatId]) return chatIdDatabase[chatId].chatKey;
+    else return false;
+}
+
+exports.chatIdToUsername = (chatId) => {
+    if (chatIdDatabase[chatId]) return chatIdDatabase[chatId].username;
+    else return false;
+}
+exports.usernameToChatKey = (username) => {
+    if (usernameDatabase[username]) return usernameDatabase[username].chatKey;
+    else return false;
+}
+exports.usernameToChatId = (username) => {
+    if (usernameDatabase[username]) return usernameDatabase[username].chatId;
+    else return false;
+}
+
+exports.chatKeyToChatId = (chatKey) => {
+    if (chatKeyDatabase[chatKey]) return chatKeyDatabase[chatKey].chatId;
+    else return false;
+}
+
+exports.chatKeyToUsername = (chatKey) => {
+    if (chatKeyDatabase[chatKey]) return chatKeyDatabase[chatKey].username;
+    else return false;
 }
 
 exports.getChats = async (chatkeysonly) => {
-    let response = await request("getchatkeys", {
-        username: config.get("credentials:username")
-    });
-    if (response.success) {
-        let chatInformation = response.data == null ? {} : JSON.parse(aesDecrypt(response.data, config.get("credentials:password:sha256")));
-        console.log("chatinfo", chatInformation);
-        if (chatkeysonly) {
-            let chats = {};
-            for (var i in chatInformation) {
-                chats[chatInformation[i].chatId] = chatInformation[i].chatKey
-                chatKeyDatabase[chatInformation[i].chatId] = chatInformation[i].chatKey
-            }
-            return chats;
-        } else {
-            let chats = [];
-            for (var i in chatInformation) {
-                let profilePicture = await exports.getProfilePicture(i);
-                let messages = await exports.getMessages(chatInformation[i].chatId, chatInformation[i].chatKey, 1, 0, true);
-                console.log("messagelength ", messages.length);
-                chats.push({
-                    username: i,
-                    profilePicture,
-                    lastMessage: messages[0],
-                    chatid: chatInformation[i].chatId,
-                    chatKey: chatInformation[i].chatKey
-                })
-            }
-            return chats;
+    let chatInformation = await getChatKeys();
+    if (chatkeysonly) {
+        let chats = {};
+        for (var i in chatInformation) {
+            chats[chatInformation[i].chatId] = chatInformation[i].chatKey
+            // chatKeyDatabase[chatInformation[i].chatId] = chatInformation[i].chatKey
+
         }
+        return chats;
     } else {
-        throw response
+        let chats = [];
+        for (var i in chatInformation) {
+            let profilePicture = await this.getProfilePicture(i);
+            let messages = await this.getMessages(chatInformation[i].chatId, chatInformation[i].chatKey, 1, 0, true);
+            console.log("messagelength ", messages.length);
+            chats.push({
+                username: i,
+                profilePicture,
+                lastMessage: messages[0],
+                chatid: chatInformation[i].chatId,
+                chatKey: chatInformation[i].chatKey
+            })
+        }
+        return chats;
     }
 };
 
@@ -405,10 +570,8 @@ exports.search.chats = query => {
     }];
 };
 exports.search.users = query => {
-    return [
-        {
-            "username": "tim",
-            "profilePicture": null
-        }
-    ];
+    return [{
+        "username": "tim",
+        "profilePicture": null
+    }];
 };

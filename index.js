@@ -282,7 +282,6 @@ ipcMain.on("message", async (event, arg) => {
             break;
 
         case "getmessages":
-
             try {
                 event.reply("message", {
                     trigger: arg.command,
@@ -339,6 +338,7 @@ ipcMain.on("message", async (event, arg) => {
             break;
 
         case "chatList":
+            apiConnection.startChatKeyListener();
             try {
                 var contacts = await apiConnection.getChats();
                 socket.feed = event.reply;
@@ -350,7 +350,7 @@ ipcMain.on("message", async (event, arg) => {
                     data: contacts
                 });
             } catch (e) {
-                console.log("failed to get contacts:");
+                console.trace("failed to get contacts:");
                 console.log(e);
                 event.reply("message", {
                     trigger: arg.command,
@@ -409,15 +409,33 @@ ipcMain.on("message", async (event, arg) => {
         case "connectSocket":
             startAnonymousWebSocket();
             break;
-            
+
         case "createChat":
-            event.reply("message", {
-                trigger: arg.command,
-                success: false,
-                data: "Username doesn't exist"
-            });
+            try {
+
+                let knowsUser = apiConnection.knowsUsername(arg.data.username);
+                if (knowsUser)
+                    throw {
+                        success: false,
+                        data: "You allready have a chat with this user",
+                        chatId: apiConnection.usernameToChatId(arg.data.username)
+                    };
+                else {
+                    let success = await apiConnection.createChat(arg.data.username);
+                    if (success) event.reply("message", {
+                        trigger: arg.command,
+                        success: true
+                    })
+                }
+            } catch (e) {
+                console.log(e);
+                event.reply("message", {
+                    trigger: arg.command,
+                    ...e
+                });
+            }
             break;
-            
+
         default:
             console.log("unknown command " + arg.command);
             console.log(arg);

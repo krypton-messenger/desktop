@@ -360,25 +360,25 @@ class main {
             onclick: noImplementation,
             icon: "create",
             text: "New Chat"
-            }, {
+        }, {
             onclick: noImplementation,
             icon: "group",
             text: "New Group"
-            }, {
+        }, {
             onclick: showSettings,
             icon: "settings",
             text: "Settings"
-            }, {
+        }, {
             onclick: logout,
             icon: "logout",
             text: "Sign Out"
-            }, {
+        }, {
             onclick: () => {
                 window.ipc.send("windowStateChange", "openDebug");
             },
             icon: "code",
             text: "Debug"
-            }]);
+        }]);
         mainContainer.appendChild(this.sideMenu.container);
 
         this.messageView = new messageView(this);
@@ -421,14 +421,14 @@ class main {
 class ChatTile {
     constructor(data) {
         if (data) {
-            this.lastMessageDate = new Date(data.lastMessage.timestamp);
+            this.lastMessageDate = new Date(data.lastMessage ? data.lastMessage.timestamp : undefined);
             this.container = document.createElement("div");
             this.container.classList.add("chatContainer");
             this.container.setAttribute("tabindex", "0");
             this.container.dataset.lastMessageTime = this.lastMessageDate.getTime();
-            this.container.dataset.chatid = data.lastMessage.chat_id;
+            this.container.dataset.chatid = data.chatid;
             this.container.instance = this;
-            this.container.onclick = (e) => {
+            this.container.onclick = (_e) => {
                 this.deselectAll(true);
                 this.container.classList.add("selected");
                 window.ipc.send('getmessages', {
@@ -442,7 +442,7 @@ class ChatTile {
 
             this.profilePictureURI = data.profilePicture;
             this.chatName = data.username ?? data.chatName;
-            this.lastMessage = data.lastMessage;
+            if (data.lastMessage) this.lastMessage = data.lastMessage;
 
         }
     }
@@ -607,14 +607,14 @@ class MessageElement {
                 label: "Reply",
                 callback: this.reply,
                 disabled: false
-                }, {
+            }, {
                 label: "Select",
                 callback: (e, obj) => {
                     obj.select();
                 },
                 args: [this],
                 disabled: false
-                }, {
+            }, {
                 label: "Copy Text",
                 callback: (e, value) => {
                     console.log("copy text");
@@ -622,7 +622,7 @@ class MessageElement {
                 },
                 args: [this.data.message.value],
                 disabled: false
-                }, {
+            }, {
                 label: "Message information",
                 callback: (e, messageData) => {
                     let tableData = Object.keys(messageData).map((key, index) => {
@@ -654,7 +654,7 @@ class MessageElement {
                 },
                 args: [this.data],
                 disabled: false
-                }]);
+            }]);
         });
 
         this.container.dataset.timestampMinutes = this.pad(this.date.getMinutes(), 2);
