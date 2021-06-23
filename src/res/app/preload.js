@@ -15,9 +15,3 @@ contextBridge.exposeInMainWorld("ipc", {
         ipcRenderer.on("message", callback);
     }
 });
-
-contextBridge.exposeInMainWorld("config", {
-    server: config.get("server"),
-    username: config.get("credentials:username"),
-    signedIn: config.get("signedIn")
-});

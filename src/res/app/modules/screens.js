@@ -15,7 +15,7 @@ class windowScreen {
         this.rootElement = document.createElement("div");
         this.generateScreen();
     }
-    getElement(){
+    getElement() {
         return this.rootElement;
     }
     parseForm(form) {
@@ -44,25 +44,28 @@ class FormScreen extends windowScreen {
     generateScreen() {
         this.rootElement.classList.add(...this.rootClass.split(" "));
 
-        let mainForm = document.createElement("form");
-        mainForm.action = this.submit.bind(this);
-        this.rootElement.appendChild(mainForm);
+        this.mainForm = document.createElement("form");
+        this.mainForm.onsubmit = ((event)=>{
+            event.preventDefault();
+            this.submit();
+        }).bind(this);
+        this.rootElement.appendChild(this.mainForm);
 
         let formTitle = document.createElement("h1");
         formTitle.appendChild(document.createTextNode(this.formTitle));
-        mainForm.appendChild(formTitle);
+        this.mainForm.appendChild(formTitle);
 
         for (let i of this.inputFields) {
-            mainForm.appendChild(new Input(i).element);
+            this.mainForm.appendChild(new Input(i).element);
         }
 
         for (let i of this.buttons) {
-            mainForm.appendChild(new Button(i).element);
+            this.mainForm.appendChild(new Button(i).element);
 
         }
 
         this.errorElement = document.createElement("p");
-        mainForm.appendChild(this.errorElement);
+        this.mainForm.appendChild(this.errorElement);
     }
     submit(_event) {
         console.log(this.parseForm(this.mainForm))
@@ -70,15 +73,15 @@ class FormScreen extends windowScreen {
 }
 
 class SignupScreen extends FormScreen {
-     get formTitle() {
+    get formTitle() {
         return "Sign up";
     }
-     get rootClass() {
+    get rootClass() {
         return "formScreen signupScreen";
     }
-     get inputFields() {
+    get inputFields() {
         return [{
-                name: "serverurl",
+                name: "serverUrl",
                 type: "text",
                 placeholder: "server"
             },
@@ -97,7 +100,7 @@ class SignupScreen extends FormScreen {
             }
         ];
     }
-     get buttons() {
+    get buttons() {
         return [{
             type: "submit",
             label: "Sign up"
@@ -113,20 +116,20 @@ class SignupScreen extends FormScreen {
         }];
     }
     submit(_event) {
-        this.kryptonInstance.ipc.send("logIn", this.parseForm(this.mainForm));
+        this.kryptonInstance.ipc.send("signUp", this.parseForm(this.mainForm));
     }
 }
 
 class LoginScreen extends FormScreen {
-     get formTitle() {
+    get formTitle() {
         return "Login";
     }
-     get rootClass() {
+    get rootClass() {
         return "formScreen loginScreen";
     }
-     get inputFields() {
+    get inputFields() {
         return [{
-                name: "serverurl",
+                name: "serverUrl",
                 type: "text",
                 placeholder: "server"
             },
@@ -141,7 +144,7 @@ class LoginScreen extends FormScreen {
             }
         ];
     }
-     get buttons() {
+    get buttons() {
         return [{
             type: "submit",
             label: "Log in"
@@ -160,6 +163,6 @@ class LoginScreen extends FormScreen {
         this.kryptonInstance.ipc.send("logIn", this.parseForm(this.mainForm));
     }
 }
-class MainScreen extends windowScreen{
-    
+class MainScreen extends windowScreen {
+
 }

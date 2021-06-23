@@ -36,7 +36,7 @@ class Krypton {
         this.ipc.send("startUp");
     }
 
-     get SCREENID() {
+    get SCREENID() {
         return {
             LOGIN: 0,
             SIGNUP: 1,
@@ -78,12 +78,7 @@ class Krypton {
         }, ];
     }
     generateTitleBar() {
-        // <button class="material-icons" onclick="minimizeWindow()">minimize</button>
-        // <button class="material-icons" onclick="toggleMaximizeWindow()">crop_square</button>
-        // <button class="material-icons" id="closeWindow" onclick="closeWindow()">close</button>
-
         this.titleBar = document.createElement("nav");
-        console.log(this.titleBarActions);
         for (let i of this.titleBarActions) {
             this.titleBar.appendChild(new MaterialIconButton(i).element);
         }
@@ -100,7 +95,8 @@ class Krypton {
      * @param {Object} message 
      */
     handleIpcMessage(_event, message) {
-        switch (message.action) {
+        console.log(`recieved new ipc:`, message);
+        switch (message.command) {
             case "showScreen":
                 this.showScreen(message.data.screenID);
                 break;
@@ -112,6 +108,7 @@ class Krypton {
      * @param {Number} screenID 
      */
     showScreen(screenID) {
+        console.log(`showing screen ${screenID}`);
         switch (screenID) {
             case this.SCREENID.LOGIN:
                 this.visibleScreen = new LoginScreen(this);
@@ -121,6 +118,9 @@ class Krypton {
                 break;
             case this.SCREENID.MAIN:
                 this.visibleScreen = new MainScreen(this);
+                break;
+            default:
+                console.log(`unknown screen with id ${screenID}`);
                 break;
         }
     }
