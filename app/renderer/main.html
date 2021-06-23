@@ -304,11 +304,15 @@
                     var messageComment = document.createElement("div");
                     messageComment.innerHTML = "March 12";
                     messageComment.classList.add("messageComment");
-                    console.log("sample message", response.data[0]);
-                    for (var i of response.data) {
-                        if (!document.querySelector('[data-message-id="' + i.message_id + '"]') && i
+                    if(response.data.length==0){
+                        document.getElementById("messageContainer").appendChild(document.createTextNode(" "));
+                    }else{
+                        console.log("sample message", response.data[0]);
+                        for (var i of response.data) {
+                            if (!document.querySelector('[data-message-id="' + i.message_id + '"]') && i
                             .chat_id == document.querySelector(".selected.chatContainer").dataset.chatid)
                             new MessageElement(i, "getmessages").append();
+                        }
                     }
 
                     document.getElementById("messageView").classList.remove("loading");
