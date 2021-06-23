@@ -12,14 +12,15 @@ const {
     forge = require("node-forge"),
     WebSocket = require('ws'),
     open = require("open"),
-    config = require("./app/config"),
-    apiConnection = require("./app/apiConnection"),
-    fileEncrypt = require("./app/fileEncrypt"),
-    fileDecrypt = require("./app/fileDecrypt");
+    config = require("./res/config"),
+    apiConnection = require("./res/apiConnection"),
+    fileEncrypt = require("./res/fileEncrypt"),
+    fileDecrypt = require("./res/fileDecrypt");
 
 const containingFile = () => {
     console.log("loginstate: ", config.get("signedIn"));
-    return config.get("signedIn") ? "app/renderer/main.html" : "app/renderer/login.html"
+    // return config.get("signedIn") ? "app/renderer/main.html" : "app/renderer/login.html"
+    return "src/res/app/index.html"
 };
 
 var win;
@@ -33,15 +34,15 @@ function createWindow() {
         height: configSize[1],
         frame: false,
         webPreferences: {
-            preload: path.join(__dirname, "app/renderer/preload.js"),
+            preload: path.join(__dirname, "res/app/preload.js"),
         }
     });
 
     win.setMenuBarVisibility(true);
     win.setMenu(new Menu());
-    win.setIcon(nativeImage.createFromPath("app/icon.png"));
+    win.setIcon(nativeImage.createFromPath("res/icon.png"));
     win.loadFile(containingFile());
-
+    win.webContents.openDevTools();
     win.on("resize", () => {
         config.setAndSave("windowSize", win.getSize());
     });
@@ -310,10 +311,10 @@ ipcMain.on("message", async (event, arg) => {
 
             try {
                 if (arg.data.newView == "signup") {
-                    win.loadFile("app/renderer/signup.html");
+                    win.loadFile("res/app/signup.html");
                     console.log("loaded signup view");
                 } else if (arg.data.newView == "login") {
-                    win.loadFile("app/renderer/login.html");
+                    win.loadFile("res/app/login.html");
                     console.log("loaded login view");
                 } else {
                     console.log(arg.data.newView, "unknown view");

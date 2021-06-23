@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Krypton Messenger for Desktop",
   "repository": "",
-  "main": "index.js",
+  "main": "./src/index.js",
   "scripts": {
-    "test": "mocha start.js",
+    "test": "mocha ./src/start.js",
     "start": "electron .",
     "reset": "node reset",
     "package": "electron-packager . --overwrite --all --icon=assets/icons/icon --prune=true --out=release-builds",

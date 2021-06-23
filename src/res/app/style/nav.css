@@ -1,0 +1,32 @@
+nav {
+    background: hsl(var(--c6)/0.5);
+    -webkit-app-region: drag;
+    height: var(--navHeight);
+    user-select: none;
+    display: flex;
+    justify-content: flex-end;
+}
+
+nav button {
+    color: hsl(var(--c4));
+    -webkit-app-region: no-drag;
+    background: none;
+    border: none;
+    align-self: center;
+    padding: 5px;
+    font-size: 0.9em !important;
+    font-weight: bolder !important;
+    z-index: 500;
+    display: flex !important;
+    align-items: center;
+    height: inherit;
+    margin: 0 !important;
+}
+
+nav button:hover {
+    background: hsl(var(--c6));
+}
+
+nav button.closeWindow:hover {
+    background: hsl(var(--c1));
+}
