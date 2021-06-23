@@ -1,7 +1,7 @@
 try {
     const nconf = require("nconf"),
-        fs = require("fs");
-    exports.userConfigFileLocation = "./userConfig.json";
+        fs = require("fs-extra");
+    exports.userConfigFileLocation = (process.env.APPDATA ?? process.env.HOME) + "/.krypton/userData/userConfig.json";
     exports.setAndSave = async (key, value) => {
         exports.set(key, value);
         exports.save();
@@ -21,6 +21,9 @@ try {
         exports.set("server", exports.get("server") ?? "http://krypton");
         exports.setAndSave("signedIn", false);
     };
+
+
+    fs.ensureFileSync(this.userConfigFileLocation);
 
     // read main config file
     nconf.file({

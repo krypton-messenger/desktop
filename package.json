@@ -1,6 +1,6 @@
 {
   "name": "krypton_desktop",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "description": "Krypton Messenger for Desktop",
   "repository": "",
   "main": "index.js",
@@ -10,7 +10,7 @@
     "reset": "node reset",
     "package": "electron-packager . --overwrite --all --icon=assets/icons/icon --prune=true --out=release-builds",
     "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icons/icon.icns --prune=true --out=release-builds",
-    "package-win": "electron-packager . krypton-desktop --platform=win32 --arch=ia32 --icon=assets/icons/icon.ico --prune=true --out=release-builds --version-string.ProductName=\"Krypton Desktop\"",
+    "package-win": "electron-packager . krypton-desktop --overwrite --platform=win32 --arch=ia32 --icon=assets/icons/icon.ico --prune=true --out=release-builds --version-string.ProductName=\"Krypton Desktop\"",
     "package-linux": "electron-packager . krypton-desktop --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/icon.png --prune=true --out=release-builds"
   },
   "keywords": [],
@@ -24,12 +24,14 @@
   "dependencies": {
     "exec-sh": "^0.4.0",
     "fs": "0.0.1-security",
+    "fs-extra": "^10.0.0",
     "got": "^11.8.2",
     "material-components-web": "^10.0.0",
     "mocha": "^9.0.1",
     "nconf": "^0.11.2",
     "node-forge": "^0.10.0",
     "open": "^8.2.1",
+    "os": "^0.1.1",
     "path": "^0.12.7",
     "ws": "^7.5.0"
   }
