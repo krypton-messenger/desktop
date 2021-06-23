@@ -492,7 +492,7 @@ class ChatTile {
                 this.messagePreview.appendChild(attachFileSpan);
 
                 let fileName = document.createElement("span");
-                fileName.appendChild(document.createTextNode(value.message.value.split(":")[0]))
+                fileName.appendChild(document.createTextNode(JSON.parse(value.message.value).fileName ?? "File"))
                 this.messagePreview.appendChild(fileName);
                 break;
             default:
@@ -703,36 +703,38 @@ class MessageElement {
         this.messageType = data.messageType;
         switch (this.messageType) {
             case "file":
-                let [title, fileId, rawSize, encryptedSize, mimeType] = data.message.value.split(":");
                 this.file = {
-                    title,
-                    fileId,
-                    rawSize,
-                    encryptedSize,
-                    mimeType,
-                    chatId: data.chat_id
+                    fileName: "",
+                    fileKey: "",
+                    iv: "",
+                    fileSize: 0,
+                    fileParts: [],
+                    fileMime: ""
                 };
+                this.file = JSON.parse(data.message.value);
+                console.log(this.file);
                 this.container.onclick = () => {
                     if (!this.container.parentElement.querySelector(".selected.message")) this.downloadFile(this.file);
                 };
 
                 this.contentElement = document.createElement("div");
                 this.contentElement.classList.add("file");
-                this.contentElement.dataset.title = this.file.title;
-                this.contentElement.dataset.fileId = this.file.fileId;
-                this.contentElement.dataset.rawSize = this.file.rawSize;
-                this.contentElement.dataset.encryptedSize = this.file.encryptedSize;
-                this.contentElement.dataset.mimeType = this.file.mimeType;
+                this.contentElement.dataset.title = this.file.fileName;
+                this.contentElement.dataset.fileId = this.file.fileParts;
+                this.contentElement.dataset.size = this.file.fileSize;
+                this.contentElement.dataset.mimeType = this.file.fileMime;
+                this.contentElement.dataset.iv = this.file.iv;
 
                 this.file.titleElement = document.createElement("span");
                 this.file.titleElement.classList.add("fileTitle");
-                this.file.titleElement.appendChild(document.createTextNode(this.file.title));
+                this.file.titleElement.appendChild(document.createTextNode(this.file.fileName));
                 this.contentElement.appendChild(this.file.titleElement);
 
 
                 this.file.sizeSpan = document.createElement("span");
                 this.file.sizeSpan.classList.add("fileSize");
-                this.file.sizeSpan.appendChild(document.createTextNode(this.formatBytes(this.file.rawSize)));
+                if (this.file.fileSize) this.file.sizeSpan.appendChild(document.createTextNode(this.formatBytes(this.file.fileSize)));
+                else this.file.sizeSpan.appendChild(document.createTextNode("unknown size"));
                 this.contentElement.appendChild(this.file.sizeSpan);
 
 
@@ -750,9 +752,10 @@ class MessageElement {
 
     downloadFile(file) {
         window.ipc.send('downloadFile', {
-            id: file.fileId,
-            title: file.title,
-            chatId: file.chatId
+            fileParts:file.fileParts,
+            title: file.fileName,
+            key: file.fileKey,
+            iv: this.file.iv
         });
     }
 

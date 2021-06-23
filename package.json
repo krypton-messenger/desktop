@@ -26,7 +26,7 @@
     "material-components-web": "^10.0.0",
     "nconf": "^0.11.2",
     "node-forge": "^0.10.0",
-    "open": "^8.0.4",
+    "open": "^8.2.1",
     "path": "^0.12.7",
     "ws": "^7.5.0"
   }

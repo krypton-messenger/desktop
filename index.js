@@ -11,9 +11,11 @@ const {
     fs = require("fs"),
     forge = require("node-forge"),
     WebSocket = require('ws'),
+    open = require("open"),
     config = require("./app/config"),
-    apiConnection = require("./app/apiConnection");
-
+    apiConnection = require("./app/apiConnection"),
+    fileEncrypt = require("./app/fileEncrypt"),
+    fileDecrypt = require("./app/fileDecrypt");
 
 const containingFile = () => {
     console.log("loginstate: ", config.get("signedIn"));
@@ -363,28 +365,43 @@ ipcMain.on("message", async (event, arg) => {
 
         case "downloadFile":
             console.log("downloading file", arg);
-
+            // arg.data = {
+            //     fileParts,
+            //     title,
+            //     key
+            // }
             // docs: https://github.com/electron/electron/blob/master/docs/api/dialog.md#dialogshowsavedialogbrowserwindow-options
             console.log("save as " + arg.data.title);
-            let result = await dialog.showSaveDialog({
+            let result = await dialog.showSaveDialog(win, {
                 defaultPath: arg.data.title
             });
             if (!result.canceled) {
                 event.reply("message", {
                     trigger: arg.command,
                     success: undefined,
-                    data: `Downloading ${arg.data.title}`
+                    data: `Downloading '${arg.data.title}'`
                 });
                 console.log(`saving to ${result.filePath}`);
+                await fileDecrypt.decryptFromList(arg.data.key, arg.data.iv, arg.data.fileParts, result.filePath);
+                event.reply("message", {
+                    trigger: arg.command,
+                    success: true,
+                    data: {
+                        message: `Downloaded '${arg.data.title}'`,
+                        openFile: result.filePath
+                    }
+                })
             } else {
                 event.reply("message", {
                     trigger: arg.command,
                     success: false,
-                    data: "Download aborted by user"
+                    data: "Download aborted"
                 });
             }
             break;
-
+        case "openFile":
+            open(arg.data.file);
+            break;
         case "ownProfile":
             try {
                 var profilePicture = await apiConnection.getProfilePicture(config.get("credentials:username"));
@@ -435,7 +452,20 @@ ipcMain.on("message", async (event, arg) => {
                 });
             }
             break;
+        case "attachFile":
+            let dialogResult = await dialog.showOpenDialog(win, {
+                properties: ["openFile", ]
+            });
+            // multiSelections
+            // openDirectory
 
+            if (!dialogResult.canceled) {
+                console.log(`loading from ${dialogResult.filePaths }`);
+                fileEncrypt.fromPath(arg.data.quote, dialogResult.filePaths[0], arg.data.reciever)
+            } else {
+                console.log(`aborted`);
+            }
+            break;
         default:
             console.log("unknown command " + arg.command);
             console.log(arg);

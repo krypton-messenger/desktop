@@ -1,6 +1,3 @@
-const {
-    exception
-} = require("console");
 const config = require("./config"),
     forge = require("node-forge"),
     fs = require("fs"),
@@ -27,7 +24,7 @@ const request = async (action, params) => {
 };
 var chatDatabase = {};
 
-const aesDecrypt = (message, password) => {
+exports.aesDecrypt = (message, password) => {
     var [iv, numIterations, salt, encrypted] = message.split("$");
     iv = forge.util.hexToBytes(iv);
     salt = forge.util.hexToBytes(salt);
@@ -44,12 +41,12 @@ const aesDecrypt = (message, password) => {
     decipher.update(forge.util.createBuffer(encrypted));
 
 
-    var result = decipher.finish();
+    decipher.finish();
     return decipher.output.data;
 
 };
 
-const aesEncrypt = (message, password, numIterations) => {
+exports.aesEncrypt = (message, password, numIterations) => {
     numIterations = numIterations ?? 12;
 
     var salt = forge.random.getBytesSync(128);
@@ -76,9 +73,9 @@ const removeFromChatKeyInbox = async (entries) => {
         username: config.get("credentials:username"),
         content: entries
     });
-    if(response.success){
+    if (response.success) {
         return true;
-    }else{
+    } else {
         throw response.error;
     }
 }
@@ -91,7 +88,7 @@ const getChatKeyInbox = async () => {
         for (let i of JSON.parse(response.data)) {
             let [encryptedUsername, encryptedChatKey, signature] = i.split("::");
             // console.log([encryptedUsername, encryptedChatKey, signature] );
-            let sk = getOwnPrivateKey();
+            let sk = this.getOwnPrivateKey();
             let decryptedChatKey = sk.decrypt(forge.util.hexToBytes(encryptedChatKey));
             let decryptedUsername = sk.decrypt(forge.util.hexToBytes(encryptedUsername));
 
@@ -225,7 +222,7 @@ const getChatKeys = async () => {
     if (response.success) {
         // {username:{chatId, chatKey}}
         console.log(!!response.data);
-        let chatInformation = !response.data ? {} : JSON.parse(aesDecrypt(response.data, config.get("credentials:password:sha256")));
+        let chatInformation = !response.data ? {} : JSON.parse(this.aesDecrypt(response.data, config.get("credentials:password:sha256")));
         // add data to local db
         for (let i in chatInformation) {
             chatKeyDatabase[chatInformation[i].chatKey] = {
@@ -253,7 +250,7 @@ const updateOwnChatKeys = async (username, chatKey, chatId) => {
         chatKey,
         chatId
     };
-    let data = aesEncrypt(JSON.stringify(chatKeys), config.get("credentials:password:sha256"));
+    let data = this.aesEncrypt(JSON.stringify(chatKeys), config.get("credentials:password:sha256"));
     // auth???
     console.log("updating chat keys");
     let result = await request("updateChatKeys", {
@@ -272,7 +269,7 @@ exports.createChat = async targetUser => {
         let recieverPublickey = await this.getPublicKey(targetUser);
         let encryptedChatKey = forge.util.bytesToHex(recieverPublickey.encrypt(chatKey));
         let encryptedOwnUsername = forge.util.bytesToHex(recieverPublickey.encrypt(config.get("credentials:username")));
-        let ownPrivateKey = getOwnPrivateKey();
+        let ownPrivateKey = this.getOwnPrivateKey();
         let md = forge.md.sha1.create();
         md.update(chatKey, 'utf8');
         let signature = forge.util.bytesToHex(ownPrivateKey.sign(md));
@@ -316,11 +313,25 @@ exports.getPublicKey = async user => {
 }
 
 exports.getMessagesFromStorage = (chatid) => {
-    return Object.values(chatDatabase[chatid].messages);
+    if(chatDatabase[chatid]) return Object.values(chatDatabase[chatid].messages);
+    else return false;
 }
-const getOwnPrivateKey = () => {
+exports.getOwnPrivateKey = () => {
     return forge.pki.decryptRsaPrivateKey(config.get("credentials:privateKey:encrypted"), config.get("credentials:password:sha256"));
 }
+exports.sendFile = async (content) => {
+    let response = await request("sendfile", {
+        content
+    });
+    return response
+}
+exports.getFile = async (id) => {
+    let response = await request("getFile", {
+        id
+    });
+    return response;
+}
+
 exports.sendMessage = async (value, chatid, quote, messageType) => {
     if (!value.length) throw {
         "error": "Can't send empty message"
@@ -329,19 +340,19 @@ exports.sendMessage = async (value, chatid, quote, messageType) => {
         value,
         quote
     });
-    let sk = getOwnPrivateKey();
+    let sk = this.getOwnPrivateKey();
 
     let md = forge.md.sha1.create().update(msgcontent, 'utf8');
     let signature = forge.util.bytesToHex(sk.sign(md));
     let chatKey = this.chatIdToChatKey(chatid);
-
     if (!chatKey) {
+        console.log("tying to get chatkey for " + chatid);
         throw {
             "error": "Could not send message, Key not found"
         }
     }
 
-    let content = aesEncrypt([config.get("credentials:username"), forge.util.bytesToHex(forge.util.encodeUtf8(msgcontent)), signature, messageType ?? "text"].join("::"), chatKey);
+    let content = this.aesEncrypt([config.get("credentials:username"), forge.util.bytesToHex(forge.util.encodeUtf8(msgcontent)), signature, messageType ?? "text"].join("::"), chatKey);
     try {
         let serverResponse = await request("sendmessage", {
             content,
@@ -366,7 +377,7 @@ exports.sendMessage = async (value, chatid, quote, messageType) => {
 }
 exports.decryptMessage = async (encryptedContent, chatKey, message_id, chat_id, encryptionType, timestamp) => {
     // decrypt message
-    let [sender, content, signature, messageType] = aesDecrypt(encryptedContent, chatKey).split("::");
+    let [sender, content, signature, messageType] = this.aesDecrypt(encryptedContent, chatKey).split("::");
     try {
 
         // decode content

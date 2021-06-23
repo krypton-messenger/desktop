@@ -72,7 +72,7 @@
             </div>
             <div id="messageActionArea">
 
-                <button onclick="noImplementation()">
+                <button onclick="attachFile()">
                     <i class="material-icons">attach_file</i></button>
                 <textarea id="messageContent" placeholder="Write a message..."></textarea>
                 <button onclick="noImplementation()">
@@ -186,7 +186,12 @@
                 }
             }).show();
         }
-
+        const attachFile = () => {
+            window.ipc.send("attachFile", {
+                quote: window.quotedMessage,
+                reciever: document.querySelector(".selected.chatContainer").dataset.chatid
+            });
+        }
         const search = (value) => {
             window.ipc.send('search', {
                 query: value
@@ -361,9 +366,22 @@
                     break;
 
                 case "downloadFile":
-                    new Toast(response.data, {
-                        timer: 2000
-                    });
+                    if (response.success) {
+                        console.log("showing open toast");
+                        window.downloadingFileToast.closeBtn.click();
+                        new Toast(response.data.message, {
+                            actions: [{
+                                callback: () => {
+                                    window.ipc.send("openFile", {
+                                        file: response.data.openFile
+                                    });
+                                },
+                                text: "Open"
+                            }]
+                        });
+                    } else {
+                        window.downloadingFileToast = new Toast(response.data);
+                    }
                     break;
 
                 case "sendmessage":
