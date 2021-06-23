@@ -4,13 +4,65 @@ const config = require("./config"),
     got = require("got");
 
 
+const getUsernameIfNeeded = action => {
+    if (isAuthNeeded(action)) return {
+        username: config.get("credentials:username")
+    };
+    else return {};
+}
+
+const isAuthNeeded = action => {
+    let authNeeded = ["knock", "setprofilepicture", "updatechatkeys", "getchatkeys", "getchatkeyinbox", "getchatkeysinbox", "removechatkey", "removechatkeys", "awaitinbox", "updatechatkeyinbox", "awaitchatkeyinbox"].indexOf(action) >= 0;
+    console.log(`authorisation needed: ${authNeeded} for action ${action}`);
+    return authNeeded;
+}
+const authenticate = async () => {
+    let response = await request("authenticate", {
+        username: config.get("credentials:username"),
+        password: config.get("credentials:password:sha512")
+    });
+    if (response.success) {
+        config.setAndSave("credentials:authToken", response.token);
+    } else {
+        // logout to brutal?
+        config.reset();
+        socket.anonymousConnection.close();
+        win.loadFile(containingFile());
+    }
+}
+const getAuthHeaderIfNeeded = action => {
+    if (isAuthNeeded(action)) return {
+        Authorization: "Bearer " + config.get("credentials:authToken")
+    };
+    else return {};
+}
+const handleError = async response => {
+    switch (response.error.code) {
+        case "0x001b": // auth token doesn't match
+            await authenticate();
+            break;
+        default:
+            return;
+    }
+    return;
+}
+
 const request = async (action, params) => {
     console.log(`requesting ${action}`);
     try {
-        return await got.post(action, {
+        let response = await got.post(action, {
             prefixUrl: config.get("server"),
-            json: params,
+            json: {
+                ...params,
+                ...getUsernameIfNeeded(action)
+            },
+            headers: {
+                ...getAuthHeaderIfNeeded(action)
+            }
         }).json();
+        if (response.error) await handleError(response)
+        console.log(response);
+        return response;
     } catch (err) {
         console.error(err);
         return {
@@ -313,7 +365,7 @@ exports.getPublicKey = async user => {
 }
 
 exports.getMessagesFromStorage = (chatid) => {
-    if(chatDatabase[chatid]) return Object.values(chatDatabase[chatid].messages);
+    if (chatDatabase[chatid]) return Object.values(chatDatabase[chatid].messages);
     else return false;
 }
 exports.getOwnPrivateKey = () => {

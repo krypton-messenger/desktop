@@ -63,7 +63,6 @@ encryptFile = async (quote, filePath, chatId) => {
 
                 // upload the encrypted part and add the returned key to the list
                 // using promises for speed
-                console.warn(thisIndex, encryptedString);
                 fileParts[thisIndex] = false;
                 sendFile(encryptedString).then((response) => {
                     // because part 2 could return faster than part 1, we don't push the id, but place it at its index
