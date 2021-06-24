@@ -40,7 +40,6 @@ class KryptonBackend {
         return "src/res/app/index.html";
     }
     async handleIpcMessage(event, arg) {
-        console.log(arg.command);
         switch (arg.command) {
             case "startUp":
                 this.sendIpc = (command, data) => {
@@ -57,20 +56,26 @@ class KryptonBackend {
                 });
                 break;
 
+            case "logOut":
+                this.sendIpc("showScreen", {
+                    screenID: this.SCREENID.LOGIN
+                });
+                this.config.reset();
+                break;
+
             case "logIn":
-                console.log("logging in with given credentials");
-                let response = await api.logIn(arg.data);
-                if (response.success) this.sendIpc("showScreen", {
+                let logInResponse = await api.logIn(arg.data);
+                if (logInResponse.success) this.sendIpc("showScreen", {
                     screenID: this.SCREENID.MAIN
                 });
                 else this.sendIpc("error", {
-                    error: response.error.description
+                    error: logInResponse.error.description
                 });
                 break;
 
             case "signUp":
                 console.log("signing up with given credentials");
-                let response = await api.signUp({
+                let signUpResponse = await api.signUp({
                     createAccountSuccessCallback: (() => {
                         // show login screen if account creates successfully
                         this.sendIpc("showScreen", {
@@ -80,14 +85,46 @@ class KryptonBackend {
                     ...arg.data
                 });
                 // log in directly if it works
-                if (response.success) this.sendIpc("showScreen", {
+                if (signUpResponse.success) this.sendIpc("showScreen", {
                     screenID: this.SCREENID.MAIN
                 });
                 else this.sendIpc("error", {
-                    error: response.error.description
+                    error: signUpResponse.error.description
                 });
                 break;
 
+            case "closeWindow":
+                this.browserWindow.close();
+                break;
+
+            case "toggleMaxinizeWindow":
+                if (this.browserWindow.isMaximized()) this.browserWindow.unmaximize()
+                else this.browserWindow.maximize();
+                break;
+
+            case "minimizeWindow":
+                this.browserWindow.minimize();
+                break;
+
+            case "startDebug":
+                this.browserWindow.webContents.closeDevTools();
+                this.browserWindow.webContents.openDevTools();
+                break;
+            case "requestChatList":
+                this.sendIpc("chatList", {
+                    chatList: {
+                        Chats: [{
+                            title: "Chat with Admin",
+                            subtitle: "good morning, i was thinking we could get a beer?",
+                            timestamp: 1624540755,
+                            picture: "data:"
+                        }]
+                    }
+                });
+                break;
+            case "startRemoteServer":
+                // start server for remote access
+                break;
             default:
                 console.log(`uncaught ipc-command ${arg.command}, nothing done`);
                 break;
@@ -115,7 +152,7 @@ class KryptonBackend {
         this.browserWindow.loadFile(this.rootFile);
         this.browserWindow.webContents.openDevTools();
         this.browserWindow.on("resize", () => {
-            config.setAndSave("windowSize", win.getSize());
+            config.setAndSave("windowSize", this.browserWindow.getSize());
         });
     }
 }

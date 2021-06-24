@@ -1,4 +1,4 @@
-input{
+input {
     padding: 10px 20px;
     background: hsl(var(--c5));
     border: 1px solid hsl(var(--c6) /.5);
@@ -8,8 +8,13 @@ input{
     transition: border-bottom var(--transitionDuration), padding-bottom var(--transitionDuration);
 }
 
-input:focus, input:hover {
+input:focus,
+input:hover {
     border-bottom: 2px solid hsl(var(--c6));
     padding-bottom: 9px;
     outline: 0;
+}
+
+input:only-child {
+    margin-bottom: 0;
 }

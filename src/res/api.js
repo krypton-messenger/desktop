@@ -4,20 +4,25 @@ const got = require("got"),
 
 const request = async (action, data, authenticate, method) => {
     try {
-
-        let response = await got(action, {
-            method: method ?? "POST",
-            data: (authenticate) ? {
+        data = {
+            ...data,
+            ...(authenticate) ? {
                 username: config.get("credentials:username")
-            } : data,
+            } : {}
+        };
+        console.log(data);
+        let response = await got.post(action, {
+            // method: method ?? "POST",
+            json: data,
             headers: (authenticate) ? {
                 Authorization: "Bearer " + config.get("credentials:authToken")
             } : {},
-            prefixUrl: config.get("server")
+            prefixUrl: config.get("server"),
+            responseType: 'json'
         });
-        return response;
+        return response.body;
     } catch (e) {
-        console.warin("error during request:", e);
+        console.warn("error during request:", e);
         return {
             success: false,
             error: {
@@ -44,6 +49,7 @@ exports.logIn = async ({
         password: sha512Password
     });
     if (response.success) {
+        config.set("signedIn", true);
         config.setAndSave("credentials", {
             username,
             password: {

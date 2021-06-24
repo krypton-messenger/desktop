@@ -22,6 +22,7 @@
     "electron-winstaller": "^5.0.0"
   },
   "dependencies": {
+    "dayjs": "^1.10.5",
     "exec-sh": "^0.4.0",
     "fs": "0.0.1-security",
     "fs-extra": "^10.0.0",

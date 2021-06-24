@@ -2,12 +2,15 @@ body {
     margin: 0;
     background-color: hsl(var(--c5));
 }
-:root{
+
+:root {
     --navHeight: 20px;
     --transitionDuration: .2s;
 }
+
 main {
     height: calc(100vh - var(--navHeight));
+    position: relative;
 }
 
 h1,
@@ -17,8 +20,11 @@ h4,
 h5,
 h6,
 p {
-    font-family: openSans, sans-serif;
     margin-top: 0;
     font-weight: normal;
-    color: hsl(var(--c4));
+}
+
+* {
+    font-family: openSans, sans-serif;
+    color: hsl(var(--c4))
 }

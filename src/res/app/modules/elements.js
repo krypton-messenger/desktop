@@ -1,7 +1,9 @@
 export {
     Input,
     Button,
-    MaterialIconButton
+    MaterialIcon,
+    MaterialIconButton,
+    LabeledMaterialIconButton
 };
 class Input {
     constructor({
@@ -29,14 +31,32 @@ class Button {
     }) {
         this.element = document.createElement("button");
         this.element.setAttribute("type", type);
-        this.element.setAttribute("label", label);
-        this.element.appendChild(document.createTextNode(label));
+        if (typeof (label) == "string") {
+            this.element.appendChild(document.createTextNode(label));
+            this.element.setAttribute("label", label);
+        } else {
+            this.element.appendChild(label);
+            this.element.setAttribute("label", label.innerHTML);
+        }
+
+        // blur after click
+        this.element.addEventListener("click", (() => {
+            this.element.blur()
+        }).bind(this));
         for (let event of events ?? []) {
             this.element.addEventListener(event.type, event.callback);
         }
         for (let attribute of Object.keys(attr ?? {})) {
             this.element.setAttribute(attribute, attr[attribute]);
         }
+    }
+}
+class MaterialIcon {
+    constructor(materialIcon) {
+        this.materialIcon = materialIcon;
+        this.element = document.createElement("span");
+        this.element.appendChild(document.createTextNode(materialIcon));
+        this.element.classList.add("material-icons");
     }
 }
 class MaterialIconButton {
@@ -47,10 +67,38 @@ class MaterialIconButton {
     }) {
         this.element = new Button({
             type: "button",
-            label: materialIcon,
+            label: new MaterialIcon(materialIcon).element,
             events,
             attr
         }).element;
-        this.element.classList.add("material-icons");
+        this.element.classList.add("materialIconButton");
+    }
+}
+class LabeledMaterialIconButton {
+    constructor({
+        materialIcon,
+        label,
+        events,
+        attr
+    }) {
+        this.element = document.createElement("button");
+        this.element.classList.add("labbeledButton");
+
+        this.icon = new MaterialIcon(materialIcon).element;
+        this.icon.classList.add("labbeledButtonIcon");
+        this.element.appendChild(this.icon);
+
+        this.label = document.createElement("span");
+        this.label.appendChild(document.createTextNode(label));
+        this.label.classList.add("labbeledButtonLabel");
+        this.element.appendChild(this.label);
+
+        for (let event of events ?? []) {
+            this.element.addEventListener(event.type, event.callback);
+        }
+
+        for (let attribute of Object.keys(attr ?? {})) {
+            this.element.setAttribute(attribute, attr[attribute]);
+        }
     }
 }

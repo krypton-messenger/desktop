@@ -10,17 +10,21 @@ nav {
 nav button {
     color: hsl(var(--c4));
     -webkit-app-region: no-drag;
+    margin: 0 !important;
     background: none;
     border: none;
     align-self: center;
     padding: 5px;
-    font-size: 0.9em !important;
-    font-weight: bolder !important;
     z-index: 500;
     display: flex !important;
     align-items: center;
     height: inherit;
-    margin: 0 !important;
+}
+
+nav button span {
+    font-size: 1.1em !important;
+    font-weight: bolder !important;
+
 }
 
 nav button:hover {

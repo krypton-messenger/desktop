@@ -1,0 +1,56 @@
+.messageView.deselectedMessageView::before {
+    content: "Select a chat to start messaging";
+    font-size: .8em;
+    background: hsl(var(--c6));
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.messageView.deselectedMessageView {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.messageView:not(.deselectedMessageView) {
+    background: hsl(var(--c6));
+    position: relative;
+}
+
+.contactInformationBar,
+.messageActionBar {
+    background: hsl(var(--c5));
+    height: 52px;
+    display: grid;
+    grid-template-rows: 1fr;
+    position: absolute;
+    width: 100%;
+}
+
+.contactInformationBar {
+    grid-template-columns: 52px 1fr 52px 52px;
+    top: 0;
+}
+
+.messageActionBar {
+    grid-template-columns: 52px 1fr 52px 52px;
+    bottom: 0;
+}
+
+.chatTitle {
+    display: flex;
+    align-items: center;
+}
+
+.messageActionBar textarea {
+    resize: none;
+    background: transparent;
+    border: 0;
+    color: hsla(var(--c4));
+    display: flex;
+    justify-content: center;
+    font-family: 'openSans';
+    font-size: 0.8em;
+    padding-top: 1em;
+    outline: none;
+}

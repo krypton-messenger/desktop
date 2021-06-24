@@ -4,7 +4,7 @@ try {
     exports.userConfigFileLocation = (process.env.APPDATA ?? process.env.HOME) + "/.krypton/userData/userConfig.json";
     exports.setAndSave = async (key, value) => {
         exports.set(key, value);
-        exports.save();
+        return exports.save();
     };
     exports.set = (key, value) => {
         return nconf.set(key, value);
@@ -13,7 +13,9 @@ try {
         return nconf.get(key);
     };
     exports.save = () => {
-        return nconf.save();
+        let success = nconf.save();
+        console.log(`success saving cofnfig:`, success);
+        return success;
     };
     exports.reset = () => {
         exports.set("firstStart", false);
@@ -49,5 +51,5 @@ try {
     console.log("configuration storage is ready");
 
 } catch (e) {
-    console.log(["failed to load configuration storage:", e]);
+    console.log("failed to load configuration storage:", e);
 }

@@ -2,17 +2,22 @@ import {
     Input,
     Button
 } from "./elements.js";
-
+import {
+    ChatList,
+    MessageView,
+    SideMenu
+} from "./chatElements.js";
 export {
     SignupScreen,
     LoginScreen,
     MainScreen
 };
 
-class windowScreen {
+class WindowScreen {
     constructor(kryptonInstance) {
         this.kryptonInstance = kryptonInstance;
         this.rootElement = document.createElement("div");
+        this.rootElement.instance = this;
         this.generateScreen();
     }
     getElement() {
@@ -28,7 +33,7 @@ class windowScreen {
             }, {});
     }
 }
-class FormScreen extends windowScreen {
+class FormScreen extends WindowScreen {
     get formTitle() {
         return "Form";
     }
@@ -45,7 +50,7 @@ class FormScreen extends windowScreen {
         this.rootElement.classList.add(...this.rootClass.split(" "));
 
         this.mainForm = document.createElement("form");
-        this.mainForm.onsubmit = ((event)=>{
+        this.mainForm.onsubmit = ((event) => {
             event.preventDefault();
             this.submit();
         }).bind(this);
@@ -65,7 +70,12 @@ class FormScreen extends windowScreen {
         }
 
         this.errorElement = document.createElement("p");
+        this.errorElement.classList.add("errorElement");
         this.mainForm.appendChild(this.errorElement);
+    }
+    showError(errorMessage) {
+        this.errorElement.innerHTML = "";
+        this.errorElement.appendChild(document.createTextNode(errorMessage));
     }
     submit(_event) {
         console.log(this.parseForm(this.mainForm))
@@ -163,6 +173,66 @@ class LoginScreen extends FormScreen {
         this.kryptonInstance.ipc.send("logIn", this.parseForm(this.mainForm));
     }
 }
-class MainScreen extends windowScreen {
-
+class MainScreen extends WindowScreen {
+    generateScreen() {
+        this.rootElement.classList.add("mainScreen");
+        this.rootElement.instance = this;
+        this.sideMenu = new SideMenu(this, [{
+            materialIcon: "create",
+            label: "New Chat",
+            events: [{
+                type: "click",
+                callback: (() => {}).bind(this)
+            }]
+        }, {
+            materialIcon: "group",
+            label: "Create Group",
+            events: [{
+                type: "click",
+                callback: (() => {}).bind(this)
+            }]
+        }, {
+            materialIcon: "qr_code",
+            label: "Open on Mobile",
+            events: [{
+                type: "click",
+                callback: (() => {
+                    this.kryptonInstance.ipc.send("startRemoteServer")
+                }).bind(this)
+            }]
+        }, {
+            materialIcon: "settings",
+            label: "Settings",
+            events: [{
+                type: "click",
+                callback: (() => {}).bind(this)
+            }]
+        }, {
+            materialIcon: "logout",
+            label: "Log out",
+            events: [{
+                type: "click",
+                callback: (() => {
+                    this.kryptonInstance.ipc.send("logOut")
+                }).bind(this)
+            }]
+        }, {
+            materialIcon: "code",
+            label: "Developer Options",
+            events: [{
+                type: "click",
+                callback: (() => {
+                    this.kryptonInstance.ipc.send("startDebug")
+                }).bind(this)
+            }]
+        }]);
+        this.chatList = new ChatList(this);
+        this.messageView = new MessageView(this);
+    }
+    showError(errorMessage) {
+        console.error(errorMessage);
+    }
+    openMenu() {
+        this.sideMenu.open();
+    }
 }

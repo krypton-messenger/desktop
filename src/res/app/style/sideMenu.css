@@ -1,0 +1,37 @@
+.sideMenu {
+    position: absolute;
+    height: 100%;
+    width: 260px;
+    transform: translateX(-100%);
+    z-index: 99;
+    background: hsl(var(--c6));
+    transition: transform var(--transitionDuration);
+    display: flex;
+    flex-direction: column;
+}
+
+.sideMenu.openSideMenu {
+    transform: translateX(0);
+}
+
+.openSideMenu .sideMenuFocuser {
+/*sfdsfsdfdsf*/
+    transition: filter var(--transitionDuration), width var(--transitionDuration);
+    filter: opacity(.5);
+    width: calc(100vw - 260px);
+}
+
+.sideMenuFocuser {
+    width: calc(100vw);
+    left: 260px;
+    top: 0;
+    bottom: 0;
+    position: absolute;
+    background: hsl(var(--c3));
+    filter: opacity(0);
+    transition: filter var(--transitionDuration), width var(--transitionDuration), bottom 0s var(--transitionDuration)
+}
+
+.sideMenu:not(.openSideMenu) .sideMenuFocuser {
+    bottom: 100vh !important;
+}

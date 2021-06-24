@@ -46,6 +46,10 @@ class Krypton {
     set visibleScreen(screen) {
         this.mainContainer.innerHTML = "";
         this.mainContainer.appendChild(screen.getElement())
+        this._visibleScreen = screen;
+    }
+    get visibleScreen() {
+        return this._visibleScreen;
     }
     get titleBarActions() {
         return [{
@@ -100,7 +104,24 @@ class Krypton {
             case "showScreen":
                 this.showScreen(message.data.screenID);
                 break;
+            case "error":
+                this.visibleScreen.showError(message.data.error);
+                break;
+            case "chatList":
+                // only show if request not aborted
+                if (this.waitingForChatList) {
+                    this.waitingForChatList(message.data.chatList);
+                    this.waitingForChatList = false;
+                } else console.log("chatlist recieved but not displayed, callback was removed");
+                break;
         }
+    }
+
+    requestChatList(callback, query) {
+        this.ipc.send("requestChatList", {
+            query
+        });
+        this.waitingForChatList = callback;
     }
 
     /**
@@ -118,6 +139,7 @@ class Krypton {
                 break;
             case this.SCREENID.MAIN:
                 this.visibleScreen = new MainScreen(this);
+                console.log(this, this.visibleScreen);
                 break;
             default:
                 console.log(`unknown screen with id ${screenID}`);

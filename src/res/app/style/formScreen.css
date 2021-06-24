@@ -1,12 +1,16 @@
-.formScreen{
-    display:flex;
+.formScreen {
+    display: flex;
     height: 100%;
     align-items: center;
     justify-content: center;
 }
 
 form {
-    display:flex;
+    display: flex;
     flex-direction: column;
     width: min(300px, 80vw);
+}
+
+.errorElement {
+    color: #e45757;
 }
