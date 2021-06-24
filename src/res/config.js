@@ -14,7 +14,6 @@ try {
     };
     exports.save = () => {
         let success = nconf.save();
-        console.log(`success saving cofnfig:`, success);
         return success;
     };
     exports.reset = () => {

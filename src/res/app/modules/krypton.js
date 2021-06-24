@@ -1,11 +1,8 @@
-import {
-    MainScreen,
-    LoginScreen,
-    SignupScreen
-} from "./screens.js";
-import {
-    MaterialIconButton
-} from "./elements.js"
+import { MainScreen } from "./mainScreen.js";
+import { LoginScreen } from "./loginScreen.js";
+import { SignupScreen } from "./SignupScreen.js";
+import { MaterialIconButton } from "./materialIconButton.js";
+
 export {
     Krypton
 };
