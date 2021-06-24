@@ -141,7 +141,7 @@ class KryptonBackend {
             height: configSize[1],
             frame: false,
             webPreferences: {
-                preload: path.join(__dirname, "res/app/preload.js"),
+                preload: path.join(__dirname, "res/preload.js"),
             }
         });
 
