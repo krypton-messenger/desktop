@@ -22,7 +22,7 @@ class LabeledMaterialIconButton {
         this.label.appendChild(document.createTextNode(label));
         this.label.classList.add("labbeledButtonLabel");
         this.element.appendChild(this.label);
-
+        if (!events || events.length == 0) this.element.setAttribute("disabled", true);
         for (let event of events ?? []) {
             this.element.addEventListener(event.type, event.callback);
         }

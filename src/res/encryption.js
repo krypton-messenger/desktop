@@ -44,3 +44,10 @@ exports.generateKeyPair = (password) => {
 
     });
 }
+exports.parsePrivateKey = (pem, key) => {
+    try {
+        return forge.pki.decryptRsaPrivateKey(pem, key);
+    } catch (e) {
+        console.warn("error decrypting private key: ", e)
+    }
+}

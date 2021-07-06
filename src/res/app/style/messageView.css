@@ -1,3 +1,8 @@
+.messageView {
+    display: grid;
+    grid-template-rows: 52px 1fr 52px;
+}
+
 .messageView.deselectedMessageView::before {
     content: "Select a chat to start messaging";
     font-size: .8em;
@@ -15,17 +20,16 @@
 .messageView:not(.deselectedMessageView) {
     background: hsl(var(--c6));
     position: relative;
+    overflow: hidden;
 }
 
 .contactInformationBar,
 .messageActionBar {
     background: hsl(var(--c5));
-    height: 52px;
     display: grid;
     grid-template-rows: 1fr;
-    position: absolute;
-    width: 100%;
 }
+
 
 .contactInformationBar {
     grid-template-columns: 52px 1fr 52px 52px;
@@ -51,6 +55,6 @@
     justify-content: center;
     font-family: 'openSans';
     font-size: 0.8em;
-    padding-top: 1em;
+    padding-top: 1.2em;
     outline: none;
 }

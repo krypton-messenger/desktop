@@ -16,6 +16,10 @@
     padding: 2px 10px;
 }
 
+.chaTListSection.emptyChatListSection {
+    display: none;
+}
+
 .chatListSection:only-child .chatListSectionTitle {
     display: none;
 }
@@ -67,6 +71,9 @@
     padding: 2px 5px;
     transition: background var(--transitionDuration);
     cursor: pointer;
+    user-select: none;
+    grid-gap: 3px 8px;
+    border-top: 1px solid hsl(var(--c6));
 }
 
 .chatTile:hover {
@@ -118,7 +125,7 @@
 }
 
 .chatTileSubtitle {
-    font-size: .7em;
+    font-size: .8em;
 }
 
 .chatTileTime {
@@ -126,4 +133,51 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
+}
+
+.chatList:not(.loading):empty::before,
+.chatList.noChats::before {
+    content: "Your chats will appear here";
+    font-size: .8em;
+    padding: 5px 10px;
+    border-radius: 5px;
+    padding-top: 20px;
+    color: hsl(var(--c4) / .5);
+}
+
+.chatList:not(.loading):empty,
+.chatList.noChats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.noChats .chatListSection {
+    display: none;
+}
+
+.chatList.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chatList.loading::before {
+    content: "";
+    height: 25px;
+    width: 25px;
+    border: solid hsla(var(--c4)/.125);
+    border-radius: 100%;
+    border-bottom-color: transparent;
+    animation: loadingRotate 1.5s infinite linear;
+}
+
+@keyframes loadingRotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }

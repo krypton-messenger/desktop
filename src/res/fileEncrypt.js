@@ -25,18 +25,18 @@ encryptFile = async (quote, filePath, chatId) => {
     let fileParts = {};
     let fileKey = forge.util.bytesToHex(forge.random.getBytesSync(16));
     let iv = forge.util.bytesToHex(forge.random.getBytesSync(16));
-
+    
     // split file in junks of 5mb  = 5e6 bytes
     const bufferSize = 5e6;
-
+    
     // open file
     return await fs.open(filePath, 'r', async (status, fd) => {
         if (status) throw (status.message);
-
+        
         // get size
         let fileSize = fs.statSync(filePath).size;
         let remainingSize = fileSize;
-
+        
         // index of filePart
         let i = 0;
         while (remainingSize > 0) {
@@ -46,7 +46,7 @@ encryptFile = async (quote, filePath, chatId) => {
             // define a buffer by the defined size or the remaining size if it is less
             let buffer = Buffer.alloc(n);
             // read n bytes
-            fs.read(fd, buffer, 0, n, fileSize-remainingSize, function (err, num) {
+            fs.read(fd, buffer, 0, n, fileSize - remainingSize, function (err, num) {
                 if (err) throw err;
                 // for debugging show me what you've read
                 console.log(i);
@@ -98,29 +98,5 @@ encryptFile = async (quote, filePath, chatId) => {
             fileParts
         }), chatId, quote, "file");
     });
-
-    // let localFileName = forge.util.bytesToHex(forge.random.getBytesSync(20));
-    // let outFile = fs.createWriteStream(`${__dirname}/${localFileName}.aes`);
-
-    // let key = forge.random.getBytesSync(32);
-    // let iv = forge.random.getBytesSync(16);
-    // let cipher = forge.cipher.createCipher('AES-CBC', key);
-    // cipher.start({
-    //     iv
-    // });
-
-    // inFile.on("data", data => {
-    //     console.log(typeof (data));
-    //     cipher.update(forge.util.createBuffer(data));
-    // });
-    // inFile.on("end", () => {
-    //     outFile.write(cipher.output.data);
-    //     outFile.close();
-    // })
-    // return {
-    //     filePath: localFileName,
-    //     iv: forge.util.bytesToHex(iv),
-    //     key: forge.util.bytesToHex(key)
-    // }
 }
 exports.fromPath = encryptFile;

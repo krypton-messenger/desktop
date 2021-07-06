@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="icon-model" viewBox="0 0 200 200">
+    <path
+        d="M171 192.4V58.2l-58.4 0V0H36.5C32.4 0 29 3.4 29 7.6h0v184.9h0c0 4.2 3.4 7.6 7.6 7.6h126.9C167.6 200 171 196.6 171 192.4z"
+        fill="#666" />
+    <polygon points="112.6 0 171 58.3 112.6 58.3" fill="#444" />
+    <polygon points="170.9 116.5 112.6 58.3 170.9 58.3" style="fill:#010202;opacity:0.1" />
+</svg>

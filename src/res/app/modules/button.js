@@ -1,4 +1,6 @@
-export {Button}
+export {
+    Button
+}
 
 class Button {
     constructor({
@@ -9,7 +11,7 @@ class Button {
     }) {
         this.element = document.createElement("button");
         this.element.setAttribute("type", type);
-        if (typeof (label) == "string") {
+        if (typeof(label) == "string") {
             this.element.appendChild(document.createTextNode(label));
             this.element.setAttribute("label", label);
         } else {

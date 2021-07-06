@@ -21,17 +21,17 @@ class MainScreen extends WindowScreen {
         this.sideMenu = new SideMenu(this, [{
             materialIcon: "create",
             label: "New Chat",
-            events: [{
-                type: "click",
-                callback: (() => {}).bind(this)
-            }]
+            // events: [{
+            //     type: "click",
+            //     callback: (() => {}).bind(this)
+            // }]
         }, {
             materialIcon: "group",
             label: "Create Group",
-            events: [{
-                type: "click",
-                callback: (() => {}).bind(this)
-            }]
+            // events: [{
+            //     type: "click",
+            //     callback: (() => {}).bind(this)
+            // }]
         }, {
             materialIcon: "qr_code",
             label: "Open on Mobile",
@@ -44,10 +44,10 @@ class MainScreen extends WindowScreen {
         }, {
             materialIcon: "settings",
             label: "Settings",
-            events: [{
-                type: "click",
-                callback: (() => {}).bind(this)
-            }]
+            // events: [{
+            //     type: "click",
+            //     callback: (() => {}).bind(this)
+            // }]
         }, {
             materialIcon: "logout",
             label: "Log out",
@@ -55,6 +55,15 @@ class MainScreen extends WindowScreen {
                 type: "click",
                 callback: (() => {
                     this.kryptonInstance.ipc.send("logOut")
+                }).bind(this)
+            }]
+        }, {
+            materialIcon: "brightness_medium",
+            label: "Toggle Theme",
+            events: [{
+                type: "click",
+                callback: (() => {
+                    this.kryptonInstance.toggleTheme()
                 }).bind(this)
             }]
         }, {

@@ -6,6 +6,7 @@ button {
     color: hsl(var(--c4));
     box-sizing: border-box;
     transition: background var(--transitionDuration);
+    user-select: none;
 }
 
 button:focus,
@@ -41,4 +42,14 @@ button.labbeledButton {
     align-items: center;
     cursor: pointer;
     border: 0;
+}
+
+button[disabled] {
+    opacity: 0.4;
+    cursor: default;
+}
+
+button[disabled]:hover,
+button[disabled]:focus {
+    background: transparent;
 }

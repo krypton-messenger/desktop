@@ -1,0 +1,18 @@
+textarea::-webkit-scrollbar {
+    background: transparent;
+    width: .4em;
+}
+
+::-webkit-scrollbar {
+    width: .5em;
+    height: .5em;
+    background: hsla(var(--c6));
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: hsla(var(--c4)/.5);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}

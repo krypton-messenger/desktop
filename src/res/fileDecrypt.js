@@ -1,7 +1,4 @@
 const fs = require("fs"),
-    {
-        getFile
-    } = require("./apiConnection"),
     forge = require("node-forge");
 
 const aesDecrypt = (encrypted, key, iv) => {
@@ -14,16 +11,25 @@ const aesDecrypt = (encrypted, key, iv) => {
     return decipher.output.getBytes();
 }
 
-exports.decryptFromList = async (key, iv, sourceFiles, targetFile) => {
+/**
+ * 
+ * @param {Function} getFile 
+ * @param {String} key 
+ * @param {String} iv 
+ * @param {Array} sourceFiles 
+ * @param {String} targetFile 
+ * @param {Function} percentageCallback 
+ * @returns path to target file
+ */
+exports.decryptFromList = async (getFile, key, iv, sourceFiles, targetFile, percentageCallback) => {
     targetFileStream = fs.createWriteStream(targetFile, {
         encoding: "utf8"
     });
-
+    if (percentageCallback) percentageCallback(0);
     // sort the object ascending by key [4,3,5,1] => [1,3,4,5]
     for (let i in Object.keys(sourceFiles).sort((a, b) => a - b)) {
         let response = await getFile(sourceFiles[i]);
         console.log(i, response);
-        // targetFileStream.write(forge.util.hexToBytes(aesDecrypt(response.data, key))); // old not working variant
         targetFileStream.write(
             Buffer.from(
                 aesDecrypt(
@@ -36,6 +42,8 @@ exports.decryptFromList = async (key, iv, sourceFiles, targetFile) => {
                 "hex"
             )
         );
+        // send percentage of download
+        if (percentageCallback) percentageCallback((Number(i) + 1) / Object.keys(sourceFiles).length * 100);
     }
     targetFileStream.close();
     return targetFile;

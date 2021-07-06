@@ -27,14 +27,28 @@ class ChatListSection {
     get title() {
         return this._title;
     }
+    /**
+     * @param {boolean} val
+     */
+    set empty(val) {
+        if (val) {
+            this.element.classList.add("emptyChatListSection");
+            if (this.element.parentElement) this.element.parentElement.removeChild(this.element);
+        }
+        this._empty = val;
+    }
+    get empty() {
+        return this._empty
 
+    }
     set chats(value) {
         this._chats = value;
         this.chatTiles = [];
         this.chatTileContainer = document.createElement("div");
         this.chatTileContainer.classList.add("chatListSectionContainer", "chatTileContainer");
-        console.log(value);
+        if (value.length == 0) this.empty = true;
         for (let i of value) {
+            console.log("generating chattile", i)
             let chatTile = new ChatTile(i, this);
             this.chatTileContainer.appendChild(chatTile.element);
             this.chatTiles.push(chatTile);

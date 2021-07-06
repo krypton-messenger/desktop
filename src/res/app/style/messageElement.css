@@ -1,0 +1,142 @@
+.messageElement {
+    background: hsl(var(--c1));
+    padding: 10px 15px;
+    margin: 0 25px 4px 25px;
+    border-radius: 5px;
+    max-width: 60%;
+    min-width: 20px;
+    vertical-align: bottom;
+    position: relative;
+    padding-bottom: 20px;
+    font-size: .85em;
+}
+
+.sent.messageElement {
+    align-self: flex-end;
+}
+
+.recieved.messageElement {
+    align-self: flex-start;
+}
+
+.messageMeta {
+    display: flex;
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: .8em;
+    user-select: none;
+}
+
+.messageOptionsButton,
+.messageSendState {
+    font-family: materialIcons;
+    font-size: 1.4em;
+}
+
+.messageContent {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.messageContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: auto;
+    padding: 20px 0;
+}
+
+.messageContainer[data-first-message-date]::before {
+    content: attr(data-first-message-date);
+    position: fixed;
+    z-index: 90;
+    background: hsl(var(--c5) /.75);
+    padding: 5px 10px;
+    border-radius: 5px;
+    transform: translateY(-15px);
+}
+
+.sent.messageElement::before,
+.recieved.messageElement::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    border: 8px solid hsl(var(--c1));
+    border-bottom-color: transparent !important;
+}
+
+.sent.messageElement {
+    border-top-right-radius: 0;
+}
+
+.sent.messageElement::before {
+    border-right-color: transparent !important;
+    transform: translateX(100%);
+    right: 0;
+}
+
+.recieved.messageElement {
+    border-top-left-radius: 0;
+}
+
+.recieved.messageElement::before {
+    border-left-color: transparent !important;
+    transform: translateX(-100%);
+    left: 0;
+}
+
+.selected.messageElement {
+    background-color: hsl(var(--c2));
+}
+
+.selected.messageElement::before {
+    border-color: hsl(var(--c2));
+}
+
+.messageContent.file {
+    display: grid;
+    grid-template-rows: 35px 15px;
+    grid-template-columns: 50px 1fr;
+    grid-gap: 0 5px;
+    padding-right: 10px;
+    cursor: pointer;
+}
+
+.fileIcon {
+    grid-row: 1/3;
+    grid-column: 1/2;
+    overflow: hidden;
+    background: url(../resources/file.svg?c);
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.downloaded.messageElement .fileIcon::before,
+.downloading.messageElement .fileIcon::before {
+    content: "";
+    background-color: hsl(var(--c1)/.5);
+    height: calc(100% - var(--percentage) * 1%);
+    width: 100%;
+    transition: height var(--transitionDuration);
+}
+
+.fileName {
+    grid-row: 1/2;
+    grid-column: 2/3;
+    display: flex;
+    align-items: flex-end;
+}
+
+.fileSize {
+    grid-row: 2/3;
+    grid-column: 2/3;
+    display: flex;
+    align-items: flex-start;
+    font-size: .8em;
+}
