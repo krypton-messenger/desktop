@@ -50,7 +50,9 @@ class ChatList {
                 events: [{
                     type: "click",
                     callback: (() => {
-                        this.screen.kryptonInstance.showOverlay(this.screen.kryptonInstance.OVERLAYID.CREATECHAT);
+                        this.screen.kryptonInstance.showOverlay(this.screen.kryptonInstance.OVERLAYID.CREATECHAT, {
+                            title: "New Chat"
+                        });
                     }).bind(this)
                 }]
             });
@@ -163,13 +165,14 @@ class ChatList {
         this.chatListSections = []
         var hasNoChats = true;
         console.log(`chatlist:`, chats);
-        for (let i of Object.keys(chats)) {
-            console.log(i, chats[i]);
-            let section = new ChatListSection(chats[i], i, this);
-            hasNoChats = section.empty && hasNoChats; // we want to keep it to false if it is ever false
-            this.chatListSections.push(section);
-            this.chatList.appendChild(section.element);
-        }
+        if (chats)
+            for (let i of Object.keys(chats)) {
+                console.log(i, chats[i]);
+                let section = new ChatListSection(chats[i], i, this);
+                hasNoChats = section.empty && hasNoChats; // we want to keep it to false if it is ever false
+                this.chatListSections.push(section);
+                this.chatList.appendChild(section.element);
+            }
         console.log("hasNoChats", hasNoChats);
         this.hasNoChats = hasNoChats;
     }

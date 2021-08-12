@@ -1,24 +1,27 @@
 const {
     resolve
-} = require("path");
-
-const sqlite3 = require("sqlite3").verbose();
+} = require("path"),
+    encryption = require("./encryption"),
+    sqlite3 = require("sqlite3").verbose();
 
 class UserStorage {
     constructor(kryptonInstance) {
         this.kryptonInstance = kryptonInstance;
         this.chats = [];
         this.api = kryptonInstance.api;
-        this.dbLocation = (process.env.APPDATA ?? process.env.HOME) + "/.krypton/userData/userData.db"
+        this.dbLocation = resolve((process.env.APPDATA ?? process.env.HOME) + "./.krypton/userData/userData.db")
         this.init();
     }
     init() {
         this.db = new sqlite3.Database(this.dbLocation);
         this.db.run(`CREATE TABLE IF NOT EXISTS chats (
-            chatId TEXT PRIMARY KEY, 
-            chatKey TEXT NOT NULL, 
+            chatId TEXT PRIMARY KEY,
+            chatKey TEXT NOT NULL,
             username TEXT NOT NULL,
             picture TEXT DEFAULT NULL)`);
+        this.db.run(`CREATE TABLE IF NOT EXISTS publicKeys (
+                username TEXT PRIMARY KEY,
+                publicKey TEXT DEFAULT NULL)`);
         this.db.run(`CREATE TABLE IF NOT EXISTS messages (
             messageId TEXT PRIMARY KEY, 
             chatId TEXT NOT NULL, 
@@ -31,15 +34,28 @@ class UserStorage {
             encryptionType TEXT NOT NULL,
             systemComment TEXT DEFAULT NULL)`);
     }
+
+
+    reset() {
+        this.db.run("DROP TABLE chats");
+        this.db.run("DROP TABLE publicKeys");
+        this.db.run("DROP TABLE messages");
+        this.db.close();
+    }
     getChats() {
+        this.getPicturesOfMissing();
         return new Promise((resolve, reject) => {
-            this.db.all(`select * FROM chats`, (error, rows) => {
-                if (error) reject(error);
+            this.db.all(`SELECT * FROM chats`, (error, rows) => {
+                if (error) return reject(error);
                 else resolve(rows);
-            })
+                for (let row of rows) {
+                    this.kryptonInstance.ws.listenChat(row.chatId);
+                }
+            });
         });
     }
-    getChatsWithPreview() {
+    getChatsWithPreview(query) {
+        this.lastSearchQuery = query;
         // return {
         //     Chats: [{
         //         title: "admin",
@@ -60,23 +76,57 @@ class UserStorage {
                     on chats.chatId = messages.chatId
                 ORDER BY timestamp DESC)
             GROUP BY chatId`, (error, rows) => {
-                if (error) reject(error);
-                else resolve(rows);
+                if (error) {
+                    console.error(error);
+                    reject(error);
+                } else resolve(rows);
+                console.log("chats with preview:", rows);
             })
         });
 
     }
-    async getPicturesOfMissing() {
-        this.db.all(`SELECT * FROM chats WHERE picture IS NULL`, (error, rows) => {
+    async getPublicKey(username) {
+        return new Promise((resolve, reject) => {
+            this.db.run(`SELECT publicKey FROM publicKeys WHERE username is ?`, [username], async (error, rows) => {
+                console.warn(`getting publickey of ${username}`, error, rows);
+                if (error) reject(error);
+                else if (rows) resolve(encryption.parsePublicKey(rows[0].publicKey));
+                else {
+                    let pem = await this.api.getPublicKey(username, true);
+                    this.addPublicKey(pem, username);
+                    resolve(encryption.parsePublicKey(pem));
+                }
+            })
+        });
+    }
+    async addPublicKey(pem, username) {
+        this.db.run(`UPDATE publicKeys SET publicKey=? WHERE username IS ?`, [pem, username]);
+    }
+    async getPublicKeysOfMissing() {
+        this.db.all(`SELECT DISTINCT sender FROM messages WHERE sender NOT IN (SELECT username FROM publicKeys)`, (error, rows) => {
+            if (error) return error;
+            console.log(`getting publickey of missing`, error, rows);
+            for (let i of rows) {
+                console.log(`getting publickey of ${i.username}`);
+                this.addPublicKey(this.api.getPublicKey(i.username, true), i.username)
+            }
+        });
+    }
+    getPicturesOfMissing() {
+        this.db.all(`SELECT * FROM chats WHERE picture IS NULL`, async (error, rows) => {
             if (error) return error;
             console.log(rows);
             for (let i of rows) {
                 console.log(`getting picture of ${i.username}`);
+                let profilePicture = await this.kryptonInstance.api.getProfilePicture(i.username);
+                this.db.run(`UPDATE chats SET picture=? WHERE chatId LIKE ?`, [profilePicture, i.chatId], (error)=>{
+                    if(error) console.error(error);
+                });
             }
         });
     }
     async addChats(values) {
-        console.log("adding chats to db");
+        console.log("adding chats to db:", values);
         for (let username of Object.keys(values)) {
             // this.db.run(`INSERT INTO chats(username, chatId, chatKey) 
             //                 VALUES(?, ?, ?)`,
@@ -86,28 +136,14 @@ class UserStorage {
                 WHERE NOT(? IN (SELECT chatId FROM chats))`,
                 [username, values[username].chatId, values[username].chatKey, values[username].chatId]
             );
-            this.kryptonInstance.ws.listenChat(values[username].chatId, async ({
-                chatId,
-                content,
-                messageId,
-                encryptionType,
-                timestamp
-            }) => {
-                console.warn("new message recieved over socket", chatId);
-                this.kryptonInstance.sendIpc("socketMessage", {
-                    messages: [await this.decryptAndAddMessage({
-                        chatId,
-                        chatKey: values[username].chatKey,
-                        content,
-                        messageId,
-                        encryptionType,
-                        timestamp
-                    })]
-                });
-            });
+            this.kryptonInstance.ws.listenChat(values[username].chatId);
         }
         await this.loadMessages(Object.values(values));
-        await this.getPicturesOfMissing();
+        await this.getPublicKeysOfMissing();
+        this.getPicturesOfMissing();
+        this.kryptonInstance.sendIpc("chatList", {
+            Chats: await this.getChatsWithPreview(this.lastSearchQuery)
+        });
         return true;
     }
     async loadMessages(chats) {
@@ -120,24 +156,36 @@ class UserStorage {
             // collect all data
             let response = await this.api.getMessages(chatId, 0, Infinity);
             console.log(response);
+            let messages = [];
             for (let messageData of response.data) {
-                await this.decryptAndAddMessage({
+                let decryptedMessage = (await this.decryptAndAddMessage({
                     chatId,
                     chatKey,
                     ...messageData
-                })
+                }));
+                if (decryptedMessage) messages.push(decryptedMessage)
             }
+            return messages;
         }
     }
 
     hasMessage(messageId) {
-        console.log("checking for existance of message with id", messageId);
         return new Promise((resolve, reject) => {
             this.db.all("SELECT * FROM messages WHERE messageId IS ?", [messageId], (error, rows) => {
                 if (error) reject(error);
                 if (rows.length > 0) resolve(true);
                 else resolve(false);
             });
+        });
+    }
+
+    hasChat(username) {
+        return new Promise((resolve, reject) => {
+            this.db.all("SELECT COUNT(`username`) as count FROM chats WHERE `username` IS ?", [username], (error, rows) => {
+                if (error) reject(error);
+                if (rows[0].count > 0) resolve(true);
+                else resolve(false)
+            })
         });
     }
 
@@ -156,20 +204,11 @@ class UserStorage {
             } = await this.kryptonInstance.decryptor.decryptMessage(messageData.content, messageData.chatKey);
             let timestamp = new Date(messageData.timestamp).getTime() / 1000;
             let encryptionType = messageData.encryptionType;
+            let content = JSON.stringify(message);
             // insert to db
-            this.addMessage(messageId, messageData.chatId, sender, direction, timestamp, message, verified, messageType, encryptionType, decryptMsg);
-            return {
-                messageId,
-                chatId: messageData.chatId,
-                sender,
-                direction,
-                timestamp,
-                message,
-                verified,
-                messageType,
-                encryptionType,
-                systemComment: decryptMsg
-            }
+            return await this.addMessage(messageId, messageData.chatId, sender, direction, timestamp, content, verified, messageType, encryptionType, decryptMsg);
+        } else {
+            return null;
         }
     }
 
@@ -197,32 +236,63 @@ class UserStorage {
     }
 
     addMessage(messageId, chatId, sender, direction, timestamp, content, verified, messageType, encryptionType, systemComment) {
-        console.log(`adding message #${messageId} to db`);
-        this.db.run(`INSERT INTO messages(messageId, chatId, sender, direction, timestamp, content, verified, messageType, encryptionType, systemComment) 
-                                SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                                WHERE NOT(? IN (SELECT messageId FROM messages))`, [
-            messageId,
-            chatId,
-            sender,
-            direction,
-            timestamp,
-            JSON.stringify(content),
-            verified,
-            messageType,
-            encryptionType,
-            systemComment ?? "",
-            messageId
-        ], (error) => {
-            if (error) console.error(error);
+        return new Promise((resolve, reject) => {
+            console.log(`adding message #${messageId} to db`);
+            this.db.run(`INSERT INTO messages(messageId, chatId, sender, direction, timestamp, content, verified, messageType, encryptionType, systemComment) 
+            SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            WHERE NOT(? IN (SELECT messageId FROM messages))`, [
+                messageId,
+                chatId,
+                sender,
+                direction,
+                timestamp,
+                content,
+                verified,
+                messageType,
+                encryptionType,
+                systemComment ?? "",
+                messageId
+            ], (error) => {
+                if (error) reject(console.error(error));
+                else resolve({
+                    messageId,
+                    chatId,
+                    sender,
+                    direction,
+                    timestamp,
+                    content,
+                    verified,
+                    messageType,
+                    encryptionType,
+                    systemComment: systemComment ?? ""
+                });
+            });
         });
     }
-    close() {
-        this.db.close();
+    chatKeyFromChatId(chatId) {
+        return new Promise((resolve, _reject) => {
+            this.db.all("SELECT `chatKey` from `chats` WHERE `chatId` LIKE ?;", [chatId], (err, rows) => {
+                if (err) console.error(error);
+                else if (rows[0]) resolve(rows[0].chatKey);
+                else resolve(undefined);
+            })
+        });
     }
-    reset() {
-        this.db.run("DROP TABLE messages");
-        this.db.run("DROP TABLE chats");
-        this.db.close();
+
+    chatIdFromChatKey(chatKey) {
+        return new Promise((resolve, _reject) => {
+            this.db.all("SELECT `chatId` from `chats` WHERE `chatKey` LIKE ?;", [chatKey], (err, rows) => {
+                if (err) console.error(error);
+                else if (rows[0]) resolve(rows[0].chatId);
+                else resolve(undefined);
+            })
+        });
+    }
+
+    close() {
+        this.db.close((err) => {
+            if (err) console.warn("error closing db");
+        });
     }
 }
 exports.UserStorage = UserStorage;

@@ -19,17 +19,26 @@ class MessageView {
         this.screen.rootElement.appendChild(this.rootElement);
         this.showDeselected();
     }
+    get scrollBottomTolerance() {
+        return 70;
+    }
+    get scrollBottom() {
+        return this.messageContainer.scrollHeight - this.messageContainer.clientHeight - this.messageContainer.scrollTop;
+    }
     showEmpty() {
         this.rootElement.classList.add("emptyMessageView");
         this.rootElement.classList.remove("deselectedMessageView");
         this.rootElement.classList.remove("filledMessageView");
     }
     selectChat(chatTile) {
+        this.deselectChat();
+        this.screen.sideMenu.close();
         this.rootElement.innerHTML = "";
         this.selectedChat = chatTile;
         this.generateContent();
     }
     deselectChat() {
+        this.messages = [];
         this.selectedChat = null;
         this.showDeselected();
         this.rootElement.innerHTML = "";
@@ -44,10 +53,10 @@ class MessageView {
         this.createMessageContainer();
         this.createMessageActionBar();
         this.showEmpty();
-        this.screen.kryptonInstance.requestMessages(undefined, this.selectedChat.data.chatId, this.selectedChat.data.chatKey, this.displayMessages.bind(this));
+        this.screen.kryptonInstance.requestMessages(undefined, this.selectedChat.data.chatId, this.selectedChat.data.chatKey);
     }
     displayMessages(messageList) {
-        // console.log(messageList);
+        console.log(messageList);
         if (messageList.length == 0) this.showEmpty();
         else {
             this.rootElement.classList.remove("emptyMessageView");
@@ -56,12 +65,13 @@ class MessageView {
             this.messages = this.messages ?? [];
             // console.log(messageList);
             for (let i of messageList) {
-                let msg = new MessageElement(i, this.screen.kryptonInstance);
-                this.appendMessage(msg);
+                if (this.selectedChat.data.chatId == i.chatId) {
+                    let msg = new MessageElement(i, this.screen.kryptonInstance);
+                    this.appendMessage(msg);
+                }
             }
-            this.sortMessages()
-            // scroll to bottom
-            this.messageContainer.scrollBy(0, this.messageContainer.scrollHeight - this.messageContainer.clientHeight - this.messageContainer.scrollTop)
+            this.sortMessages();
+            this.scrollToBottom()
         }
     }
     sortMessages() {
@@ -73,8 +83,14 @@ class MessageView {
     appendMessage(msg, onlyMessage) {
         this.messages.push(msg);
         this.messageContainer.appendChild(msg.element);
-        this.messageContainer.scrollBy(0, msg.element.clientHeight);
-        if (onlyMessage) this.sortMessages()
+        if (this.scrollBottomTolerance >= this.scrollBottom) {
+            this.scrollToBottom();
+        }
+        msg.fadeIn();
+        if (onlyMessage) this.sortMessages();
+    }
+    scrollToBottom() {
+        this.messageContainer.scrollBy(0, this.messageContainer.scrollHeight);
     }
     createMessageContainer() {
         this.messageContainer = document.createElement("div");
@@ -103,6 +119,7 @@ class MessageView {
     isElementInViewport(el) {
         var rect = el.getBoundingClientRect();
         return (
+            this.rootElement.contains(el) &&
             rect.top >= 0 &&
             rect.left >= 0 &&
             rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && /* or $(window).height() */
@@ -161,7 +178,11 @@ class MessageView {
             materialIcon: "attach_file",
             events: [{
                 type: "click",
-                callback: (() => {}).bind(this)
+                callback: (() => {
+                    this.screen.kryptonInstance.ipc.send("sendFile", {
+                        chatId: this.selectedChat.data.chatId
+                    });
+                }).bind(this)
             }]
         }).element);
 

@@ -19,7 +19,7 @@ try {
     exports.reset = () => {
         exports.set("firstStart", false);
         exports.set("credentials", {});
-        exports.set("server", exports.get("server") ?? "http://krypton");
+        exports.set("server", exports.get("server") ?? "https://kr.ttschnz.ch");
         exports.setAndSave("signedIn", false);
     };
 

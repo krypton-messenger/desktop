@@ -17,7 +17,10 @@ class SignupScreen extends FormScreen {
         return [{
                 name: "serverUrl",
                 type: "text",
-                placeholder: "server"
+                placeholder: "server",
+                attributes: {
+                    value: this.data.servername ?? ""
+                }
             },
             {
                 name: "username",
@@ -44,7 +47,7 @@ class SignupScreen extends FormScreen {
             events: [{
                 type: "click",
                 callback: (() => {
-                    this.kryptonInstance.showScreen(this.kryptonInstance.SCREENID.LOGIN)
+                    this.kryptonInstance.showScreen(this.kryptonInstance.SCREENID.LOGIN, this.data)
                 }).bind(this)
             }]
         }];

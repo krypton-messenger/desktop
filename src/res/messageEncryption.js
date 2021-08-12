@@ -3,7 +3,7 @@ const forge = require("node-forge");
 class Decryptor {
     constructor(kryptonInstance, getPublicKey) {
         this.kryptonInstance = kryptonInstance;
-        this.getPublicKey = getPublicKey.bind(this.kryptonInstance.api);
+        this.getPublicKey = getPublicKey;
         console.warn("mimeTypes:");
     }
     aesDecrypt(message, password) {
@@ -68,18 +68,6 @@ class Decryptor {
             // });
             // decode content
             let content = forge.util.decodeUtf8(forge.util.hexToBytes(message));
-            if (messageType == "file") {
-                console.warn("message is a file");
-                try {
-                    let fileName = JSON.parse(JSON.parse(content).value).fileName;
-                    console.warn(`fileName: ${fileName}`);
-                    let mimeType = mime.getType("fileName.jpeg");
-                    console.log(mimeType);
-                    console.warn(`mime: ${mimeType}`);
-                } catch (e) {
-                    console.warn(e);
-                }
-            }
             // verify sender
             let verified, decryptMsg;
             try {

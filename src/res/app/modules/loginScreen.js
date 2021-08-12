@@ -13,10 +13,14 @@ class LoginScreen extends FormScreen {
         return "formScreen loginScreen";
     }
     get inputFields() {
+        console.log(this.data);
         return [{
                 name: "serverUrl",
                 type: "text",
-                placeholder: "server"
+                placeholder: "server",
+                attributes: {
+                    value: this.data.servername ?? ""
+                }
             },
             {
                 name: "username",
@@ -39,7 +43,7 @@ class LoginScreen extends FormScreen {
             events: [{
                 type: "click",
                 callback: (() => {
-                    this.kryptonInstance.showScreen(this.kryptonInstance.SCREENID.SIGNUP)
+                    this.kryptonInstance.showScreen(this.kryptonInstance.SCREENID.SIGNUP, this.data)
                 }).bind(this)
             }]
         }];

@@ -5,7 +5,10 @@ export {
     SideMenu
 };
 class SideMenu {
-    constructor(screen, options) {
+    constructor(screen, {
+        header,
+        items
+    }) {
         this.screen = screen;
         this.element = document.createElement("div");
         this.element.classList.add("sideMenu");
@@ -15,10 +18,15 @@ class SideMenu {
         this.element.appendChild(this.focuser);
         this.screen.rootElement.appendChild(this.element);
         this.element.instance = this;
-        this.options = []
-        for (let i of options) {
+        if (header) {
+            this.header = header;
+            this.header.classList.add("sideMenuHeader");
+            this.element.appendChild(this.header);
+        }
+        this.items = []
+        for (let i of items) {
             let button = new LabeledMaterialIconButton(i);;
-            this.options.push(button)
+            this.items.push(button)
             this.element.appendChild(button.element);
         }
     }

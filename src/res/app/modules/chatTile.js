@@ -1,7 +1,9 @@
 export {
     ChatTile
 };
-import {appropriateTime} from "./appropriateTime.js";
+import {
+    appropriateTime
+} from "./appropriateTime.js";
 import {
     markdown
 } from "./markdown.js";
@@ -39,23 +41,26 @@ class ChatTile {
 
         this.subtitle = document.createElement("span");
         this.subtitle.classList.add("chatTileSubtitle");
-        this.subtitle.appendChild(markdown(JSON.parse(this.data.content).value));
+        if (this.data.content) {
+            this.subtitle.appendChild(this.data.messageType == "file" ? document.createTextNode(JSON.parse(JSON.parse(this.data.content).value).fileName) : markdown(JSON.parse(this.data.content).value));
+            this.date = document.createElement("span");
+            this.date.classList.add("chatTileTime");
+            this.date.appendChild(document.createTextNode(appropriateTime(this.data.timestamp)));
+            this.date.setAttribute("title", new Date(this.data.timestamp * 1000).toLocaleString([], {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }))
+            this.element.appendChild(this.date);
+        } else {
+            this.subtitle.appendChild(document.createTextNode("Chat created"));
+        }
         this.subtitle.setAttribute("title", this.subtitle.innerText);
         this.element.appendChild(this.subtitle);
-
-        this.date = document.createElement("span");
-        this.date.classList.add("chatTileTime");
-        this.date.appendChild(document.createTextNode(appropriateTime(this.data.timestamp)));
-        this.date.setAttribute("title", new Date(this.data.timestamp * 1000).toLocaleString([], {
-            month: "2-digit",
-            day: "2-digit",
-            year: "numeric",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit"
-        }))
-        this.element.appendChild(this.date);
     }
     checkDataURI(dataURI) {
         return /^\s*data:([a-z]+\/[a-z]+(;[a-z\-]+\=[a-z\-]+)?)?(;base64)?,[a-z0-9\!\$\&\'\,\(\)\*\+\,\;\=\-\.\_\~\:\@\/\?\%\s]*\s*$/i.test(dataURI)

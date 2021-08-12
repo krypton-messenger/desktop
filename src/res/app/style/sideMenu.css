@@ -35,3 +35,29 @@
 .sideMenu:not(.openSideMenu) .sideMenuFocuser {
     bottom: 100vh !important;
 }
+
+.sideMenuHeader {
+    overflow:hidden;
+    overflow-wrap: anywhere;
+    background: hsl(var(--c5));
+    padding: 25px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sideMenuHeader .username {
+    color: hsl(var(--c1));
+}
+
+.sideMenu .labbeledButton:first-of-type {
+    box-shadow: inset 0px 50px 13px -50px hsl(var(--c3));
+}
+
+.sideMenuHeader .material-icons.connectionSecure {
+    color: var(--successIcon);
+}
+
+.sideMenuHeader .material-icons.connectionInsecure {
+    color: var(--errorIcon);
+}

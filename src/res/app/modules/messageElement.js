@@ -6,15 +6,19 @@ export {
 };
 
 class MessageElement {
-    constructor(messageData, kryptonInstance) {
+    constructor(messageData, kryptonInstance, socketMessage) {
+        this.socketMessage = socketMessage ?? false;
         this.kryptonInstance = kryptonInstance;
         this.element = document.createElement("div");
+        if (this.socketMessage) this.element.classList.add("socketMessage");
         this.element.classList.add("messageElement", messageData.direction);
         if (messageData.verified) this.element.classList.add("verified");
         else this.element.classList.add("unverified");
         this.element.instance = this;
         this.messageData = messageData;
-        this.content = JSON.parse(messageData.content);
+
+        this.content = typeof (messageData.content == "string") ? JSON.parse(messageData.content) : message.content;
+
         this.meta = {
             sendTime: messageData.timestamp,
             sendState: "cloud"
@@ -60,7 +64,9 @@ class MessageElement {
                 this.messageContent.classList.add("file");
                 this.messageContent.addEventListener("click", (() => {
                     // https://stackoverflow.com/a/63081745/13001645 for oneliner random string
-                    this.transactionId = Array.from({ length : 12 }, () => Math.random().toString(36)[2]).join('');
+                    this.transactionId = Array.from({
+                        length: 12
+                    }, () => Math.random().toString(36)[2]).join('');
                     this.kryptonInstance.downloadFile(this.fileInfo.fileParts, this.fileInfo.fileKey, this.fileInfo.iv, this.fileInfo.fileName, this.transactionId);
                     this.kryptonInstance.downloadingFiles[this.transactionId] = this;
                     console.log(`donwloading ${this.fileInfo}`);
@@ -87,7 +93,7 @@ class MessageElement {
                 break;
             case "text":
             default:
-                this.messageText = markdown(value);
+                this.messageText = markdown(value, true);
                 this.messageText.message = this;
                 this.messageContent.appendChild(this.messageText);
                 break;
@@ -127,5 +133,13 @@ class MessageElement {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
 
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+    fadeIn() {
+        if (this.socketMessage) {
+            this.element.getBoundingClientRect(); // await next render
+            setTimeout(()=>{
+                this.element.classList.remove("socketMessage");
+            }, 100);
+        }
     }
 }

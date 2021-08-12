@@ -10,6 +10,18 @@ import {
 import {
     MaterialIconButton
 } from "./materialIconButton.js";
+import {
+    Overlay
+} from "./overlay.js";
+import {
+    Input
+} from "./input.js";
+import {
+    Button
+} from "./button.js";
+import {
+    MessageElement
+} from "./messageElement.js";
 
 export {
     Krypton
@@ -27,6 +39,9 @@ class Krypton {
         this.generateMainContainer();
         this.ipc = ipc;
         this.downloadingFiles = {};
+        window.openLink = (url)=>{
+            this.ipc.send("openLink", {url})
+        }
     }
 
     get ipc() {
@@ -118,31 +133,40 @@ class Krypton {
         console.log(`recieved new ipc:`, message);
         switch (message.command) {
             case "showScreen":
-                this.showScreen(message.data.screenID);
+                this.showScreen(message.data.screenID, message.data.data ?? {});
                 break;
+
             case "error":
                 this.visibleScreen.showError(message.data.error);
                 break;
+
             case "chatList":
-                // only show if request not aborted
+                console.log("recieved chatlist", message.data);
                 if (this.waitingForChatList) {
-                    console.log("recieved chatlist", message.data.chatList)
-                    this.waitingForChatList(message.data.chatList);
-                    this.waitingForChatList = false;
-                } else console.log("chatlist recieved but not displayed, callback was removed");
+                    this.waitingForChatList(message.data);
+                } else{
+                    this.visibleScreen.chatList.chatListContent = chatListContent;
+                }
                 break;
+
             case "messages":
-                if (this.waitingForMessages) {
-                    console.log(message);
-                    this.waitingForMessages(message.data.messages);
-                    this.waitingForMessages = false;
-                } else console.log("messages recieved but not displayed, callback was removed");
+                // console.log(message);
+                this.visibleScreen.messageView.displayMessages(message.data.messages);
                 break;
+
             case "socketMessage":
                 console.log("new socket message:", message);
+                for (let i of message.data.messages) {
+                    let msg = new MessageElement(i, this, true);
+                    this.visibleScreen.messageView.appendMessage(msg, true);
+                }
+                this.requestChatList((chatListContent)=>{
+                    this.visibleScreen.chatList.chatListContent = chatListContent;
+                });
                 break;
+
             case "downloadFile":
-                console.log(this.downloadingFiles,message.data.transactionId);
+                console.log(this.downloadingFiles, message.data.transactionId);
                 let messageContent = this.downloadingFiles[message.data.transactionId].element;
                 switch (message.data.status) {
                     case "downloading":
@@ -167,8 +191,18 @@ class Krypton {
                         break;
                 }
                 break;
+
+            case "selectChat":
+                // if(this.visibleScreen)
+                for (let chatListSection of this.visibleScreen.chatList.chatListSections) {
+                    for (let chatTile of chatListSection.chatTiles) {
+                        if (chatTile.data.username == message.data.username) this.visibleScreen.messageView.selectChat(chatTile)
+                    }
+                }
+                break;
+                
             default:
-                console.log("unrecognized command:", command, message.data);
+                console.log("unrecognized command:", message.command, message.data);
                 break;
         }
     }
@@ -179,14 +213,13 @@ class Krypton {
         });
         this.waitingForChatList = callback;
     }
-    requestMessages(query, chatId, chatKey, callback, offset) {
+    requestMessages(query, chatId, chatKey, offset) {
         this.ipc.send("getMessages", {
             query,
             chatId,
             chatKey,
             offset
         });
-        this.waitingForMessages = callback;
     }
 
     sendMessage({
@@ -217,17 +250,17 @@ class Krypton {
      * 
      * @param {Number} screenID 
      */
-    showScreen(screenID) {
-        console.log(`showing screen ${screenID}`);
+    showScreen(screenID, data) {
+        console.log(`showing screen ${screenID}, ${JSON.stringify(data)}`);
         switch (screenID) {
             case this.SCREENID.LOGIN:
-                this.visibleScreen = new LoginScreen(this);
+                this.visibleScreen = new LoginScreen(this, data);
                 break;
             case this.SCREENID.SIGNUP:
-                this.visibleScreen = new SignupScreen(this);
+                this.visibleScreen = new SignupScreen(this, data);
                 break;
             case this.SCREENID.MAIN:
-                this.visibleScreen = new MainScreen(this);
+                this.visibleScreen = new MainScreen(this, data);
                 console.log(this, this.visibleScreen);
                 break;
             default:
@@ -235,9 +268,63 @@ class Krypton {
                 break;
         }
     }
-    showOverlay(overlayID) {
+    showOverlay(overlayID, options) {
+        let overlay = new Overlay(this);
+
+        if (options.title) {
+            let title = document.createElement("span");
+            title.classList.add("overlayTitle");
+            title.appendChild(document.createTextNode(options.title));
+            overlay.element.appendChild(title);
+        }
+
         switch (overlayID) {
-            case "":
+            case this.OVERLAYID.CREATECHAT:
+                let usernameInput = new Input({
+                    name: "username",
+                    type: "text",
+                    placeholder: "enter username",
+                    events: []
+                });
+                overlay.element.appendChild(usernameInput.element);
+
+                let createChatButton = new Button({
+                    type: "button",
+                    label: "Create Chat",
+                    events: [{
+                        type: "click",
+                        callback: ((_e) => {
+                            if (usernameInput.element.value == "") usernameInput.forbiddenValue("Username not allowed");
+                            else {
+                                this.ipc.send("createChat", {
+                                    username: usernameInput.element.value
+                                });
+                                overlay.destroy();
+                            }
+                        }).bind(this)
+                    }]
+                });
+                overlay.element.appendChild(createChatButton.element);
+
+                let cancelButton = new Button({
+                    type: "button",
+                    label: "Cancel",
+                    events: [{
+                        type: "click",
+                        callback: ((_e) => {
+                            overlay.destroy();
+                        }).bind(this)
+                    }]
+                });
+                overlay.element.appendChild(cancelButton.element);
+
+                overlay.show();
+                break;
+            case this.OVERLAYID.SETTINGS:
+            case this.OVERLAYID.STARTMOBILE:
+            case this.OVERLAYID.MESSAGEDETAILS:
+            case this.OVERLAYID.CHATDETAILS:
+            case this.OVERLAYID.POPUP:
                 break;
         }
     }

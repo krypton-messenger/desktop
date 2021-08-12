@@ -17,19 +17,19 @@ exports.processPassword = (password) => {
  * @returns {} {privateKey, publicKey}
  */
 exports.generateKeyPair = (password) => {
-    return new Promise(async (resolve, _reject) => {
+    return new Promise(async (resolve, reject) => {
         forge.pki.rsa.generateKeyPair({
             bits: 2048,
             workers: 2
         }, async (err, keypair) => {
-            if (err) resolve({
+            if (err) reject({
                 success: false,
                 error: {
                     description: 'Error while generating keypair:' + err
                 }
             });
             else {
-                privateKey = forge.pki.encryptRsaPrivateKey(keypair.privateKey, password.sha256, {
+                privateKey = forge.pki.encryptRsaPrivateKey(keypair.privateKey, password, {
                     legacy: true,
                     algorithm: 'aes256'
                 });
@@ -48,6 +48,16 @@ exports.parsePrivateKey = (pem, key) => {
     try {
         return forge.pki.decryptRsaPrivateKey(pem, key);
     } catch (e) {
-        console.warn("error decrypting private key: ", e)
+        console.warn("error decrypting private key: ", e);
+        return false;
+    }
+}
+exports.parsePublicKey = (pem) => {
+    try {
+        return forge.pki.publicKeyFromPem(pem);
+    } catch (e) {
+        console.warn("unable to parse public key: ", e);
+        console.warn("pem", pem);
+        return false;
     }
 }

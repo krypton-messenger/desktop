@@ -2,10 +2,12 @@ export {
     WindowScreen
 };
 class WindowScreen {
-    constructor(kryptonInstance) {
+    constructor(kryptonInstance, data) {
         this.kryptonInstance = kryptonInstance;
         this.rootElement = document.createElement("div");
         this.rootElement.instance = this;
+        console.log(data);
+        this.data = data;
         this.generateScreen();
     }
     getElement() {

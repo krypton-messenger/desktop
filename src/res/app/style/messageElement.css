@@ -9,6 +9,7 @@
     position: relative;
     padding-bottom: 20px;
     font-size: .85em;
+    transition: transform var(--transitionDuration), opacity var(--transitionDuration);
 }
 
 .sent.messageElement {
@@ -43,7 +44,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow: auto;
+    overflow: hidden auto;
     padding: 20px 0;
 }
 
@@ -139,4 +140,9 @@
     display: flex;
     align-items: flex-start;
     font-size: .8em;
+}
+
+.socketMessage.messageElement {
+    transform: translateX(100%);
+    opacity: 0;
 }

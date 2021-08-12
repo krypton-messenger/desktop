@@ -8,7 +8,10 @@ const {
     dialog
 } = require("electron"),
     mime = require("mime"),
-    path = require("path"), {
+    path = require("path"),
+    fs = require("fs"),
+    open = require("open")
+    forge = require("node-forge"), {
         Api
     } = require("./res/api"),
     config = require("./res/config"), {
@@ -21,8 +24,8 @@ const {
     } = require("./res/encryption"), {
         KryptonWebSocket
     } = require("./res/kryptonWebSocket"),
-    fileDecrypt = require("./res/fileDecrypt");
-    // fileEncrypt = require("./res/fileEncrypt");
+    fileDecrypt = require("./res/fileDecrypt"),
+    fileEncrypt = require("./res/fileEncrypt");
 
 class KryptonBackend {
     constructor() {
@@ -43,8 +46,9 @@ class KryptonBackend {
         this.config = config;
         this.storage = new UserStorage(this);
         this.encryptor = new Encryptor(this);
-        this.decryptor = new Decryptor(this, this.api.getPublickey);
+        this.decryptor = new Decryptor(this, this.storage.getPublicKey.bind(this.storage));
         this.ws = new KryptonWebSocket(this);
+        this.chatKeyWs = new KryptonWebSocket(this, false);
     }
     get SCREENID() {
         return {
@@ -56,6 +60,23 @@ class KryptonBackend {
     get rootFile() {
         return "src/res/app/index.html";
     }
+
+    async showMain() {
+        if (this.config.get("credentials:username") && this.config.get("server")) {
+            this.sendIpc("showScreen", {
+                screenID: this.SCREENID.MAIN,
+                data: {
+                    username: this.config.get("credentials:username"),
+                    server: this.config.get("server")
+                }
+            });
+            await this.chatKeyWs.start();
+            await this.ws.start();
+            this.api.updateChatKeys();
+            this.chatKeyWs.listenChatKey();
+        }
+    }
+
     async handleIpcMessage(event, arg) {
         switch (arg.command) {
             case "startUp":
@@ -69,17 +90,21 @@ class KryptonBackend {
                         data
                     });
                 }
-                if (this.config.get("signedIn")) this.sendIpc("showScreen", {
-                    screenID: this.SCREENID.MAIN
-                });
+                if (this.config.get("signedIn")) this.showMain();
                 else this.sendIpc("showScreen", {
-                    screenID: this.SCREENID.LOGIN
+                    screenID: this.SCREENID.LOGIN,
+                    data: {
+                        servername: this.config.get("server")
+                    }
                 });
                 break;
 
             case "logOut":
                 this.sendIpc("showScreen", {
-                    screenID: this.SCREENID.LOGIN
+                    screenID: this.SCREENID.LOGIN,
+                    data: {
+                        servername: this.config.get("server")
+                    }
                 });
                 this.config.reset();
                 this.storage.reset();
@@ -87,9 +112,7 @@ class KryptonBackend {
 
             case "logIn":
                 let logInResponse = await this.api.logIn(arg.data);
-                if (logInResponse.success) this.sendIpc("showScreen", {
-                    screenID: this.SCREENID.MAIN
-                });
+                if (logInResponse.success) this.showMain();
                 else this.sendIpc("error", {
                     error: logInResponse.error.description
                 });
@@ -102,15 +125,16 @@ class KryptonBackend {
                     createAccountSuccessCallback: (() => {
                         // show login screen if account creates successfully
                         this.sendIpc("showScreen", {
-                            screenID: this.SCREENID.LOGIN
+                            screenID: this.SCREENID.LOGIN,
+                            data: {
+                                servername: this.config.get("server")
+                            }
                         });
                     }).bind(this),
                     ...arg.data
                 });
                 // log in directly if it works
-                if (signUpResponse.success) this.sendIpc("showScreen", {
-                    screenID: this.SCREENID.MAIN
-                });
+                if (signUpResponse.success) this.showMain();
                 else this.sendIpc("error", {
                     error: signUpResponse.error.description
                 });
@@ -134,15 +158,26 @@ class KryptonBackend {
                 this.browserWindow.webContents.closeDevTools();
                 this.browserWindow.webContents.openDevTools();
                 break;
+
+            case "openLink":
+                console.log(arg.data.url);
+                open(arg.data.url);
+                break;
+
             case "requestChatList":
                 console.log("chatlist requested");
-                await this.storage.addChats(await this.api.getChats());
-                let chatList = {};
-                chatList["Chats"] = await this.storage.getChatsWithPreview(arg.data.query);
+                // send what we have
                 this.sendIpc("chatList", {
-                    chatList
+                    Chats: await this.storage.getChatsWithPreview(arg.data.query)
+                });
+                // get an update on the chats
+                this.storage.addChats(await this.api.getChats()).then(async () => {
+                    this.sendIpc("chatList", {
+                        Chats: await this.storage.getChatsWithPreview(arg.data.query)
+                    });
                 });
                 break;
+
             case "sendMessage":
                 // arg.data = {message,
                 //     delay,
@@ -157,11 +192,18 @@ class KryptonBackend {
                     chatId: arg.data.chatId
                 });
                 break;
+
             case "getMessages":
-                await this.storage.loadMessages([{
-                    chatId: arg.data.chatId,
-                    chatKey: arg.data.chatKey
-                }]);
+                (async () => {
+                    console.log("second ipc");
+                    this.sendIpc("messages", {
+                        messages: await this.storage.loadMessages([{
+                            chatId: arg.data.chatId,
+                            chatKey: arg.data.chatKey
+                        }])
+                    });
+                }).bind(this)();
+                console.log("first ipc");
                 this.sendIpc("messages", {
                     messages: await this.storage.getMessages(arg.data.query, arg.data.chatId, arg.data.offset)
                 });
@@ -173,14 +215,69 @@ class KryptonBackend {
             case "startRemoteServer":
                 // start server for remote access
                 break;
+
             case "getMime":
                 this.sendIpc("mimeType", {
                     mime: mime.getType(arg.data.fileName),
                     fileName: arg.data.fileName
                 });
+                break;
+
+            case "setProfilePicture":
+                console.log("setting profile picture");
+                var result = await dialog.showOpenDialog(this.browserWindow, {
+                    buttonLabel: "Set Profile Picture",
+                    filters: {
+                        name: "Images",
+                        extensions: ["JPEG", "PNG", "WebP", "AVIF", "GIF", "SVG", "TIFF"]
+                    },
+                    properties: ["openFile"]
+                });
+                if (!result.canceled) {
+                    let filePath = result.filePaths[0];
+                    let base64Content = fs.readFileSync(filePath).toString("base64")
+                    console.log(await this.api.setProfilePicture(`data:${mime.getType(filePath)};base64,${base64Content}`));
+                }
+                break;
+
+            case "sendFile":
+                console.log("attaching file");
+                var result = await dialog.showOpenDialog(this.browserWindow, {
+                    buttonLabel: "Send",
+                    properties: ["openFile"]
+                });
+                if (!result.canceled) {
+                    let filePath = result.filePaths[0];
+                    // encrypt and send file
+
+                    let encryptionResult = await fileEncrypt.fromPath(arg.data.quote, filePath, arg.data.chatId, this.api.sendFile.bind(this.api), (async ({
+                        content,
+                        chatId,
+                        quote,
+                        messageType
+                    }) => {
+                        console.log("recieved cdata from file encryptor:", {
+                            content,
+                            chatId,
+                            quote,
+                            messageType
+                        });
+                        let chatKey = await this.storage.chatKeyFromChatId(chatId);
+                        let encryptedMessage = await this.encryptor.encryptMessage(content, chatKey, quote, messageType);
+                        this.api.sendMessage({
+                            content: encryptedMessage,
+                            delay: 0,
+                            chatId
+                        });
+                    }).bind(this));
+                    console.log(encryptionResult);
+                    if (!encryptionResult.success) console.warn("could not send file");
+                }
+                break;
+
             case "downloadFile":
                 console.log("downloading file", arg.data);
-                let result = await dialog.showSaveDialog(this.browserWindow, {
+                var result = await dialog.showSaveDialog(this.browserWindow, {
                     defaultPath: arg.data.fileName
                 });
                 if (!result.canceled) {
@@ -194,7 +291,7 @@ class KryptonBackend {
                     }).bind(this));
                     this.sendIpc("downloadFile", {
                         transactionId: arg.data.transactionId,
-                        fileName:filePath,
+                        fileName: filePath,
                         status: "done"
                     });
                 } else {
@@ -205,6 +302,12 @@ class KryptonBackend {
                     });
                 }
                 break;
+
+            case "createChat":
+                console.log(`creating chat with`, arg.data.username);
+                this.api.createChat(arg.data.username);
+                break;
+
             default:
                 console.log(`uncaught ipc-command ${arg.command}, nothing done`);
                 break;

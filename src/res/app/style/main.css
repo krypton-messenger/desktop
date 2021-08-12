@@ -26,5 +26,10 @@ p {
 
 * {
     font-family: openSans, sans-serif;
-    color: hsl(var(--c4))
+    color: hsl(var(--c4));
+    scroll-behavior: smooth;
+}
+a.openUnsaveLink {
+    text-decoration: underline;
+    cursor: pointer;
 }
