@@ -332,7 +332,7 @@ class KryptonBackend {
         this.browserWindow.setMenu(new Menu());
         this.browserWindow.setIcon(nativeImage.createFromPath("res/icon.png"));
         this.browserWindow.loadFile(this.rootFile);
-        this.browserWindow.webContents.openDevTools();
+        // this.browserWindow.webContents.openDevTools();
         this.browserWindow.on("resize", () => {
             config.setAndSave("windowSize", this.browserWindow.getSize());
         });
