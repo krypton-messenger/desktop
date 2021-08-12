@@ -1,0 +1,39 @@
+input {
+    padding: 10px 20px;
+    background: hsl(var(--c5));
+    border: 1px solid hsl(var(--c6) /.5);
+    margin-bottom: 7.5px;
+    color: hsl(var(--c4));
+    box-sizing: border-box;
+    transition: border-bottom var(--transitionDuration), padding-bottom var(--transitionDuration);
+}
+
+input:focus,
+input:hover {
+    border-bottom: 2px solid hsl(var(--c6));
+    padding-bottom: 9px;
+    outline: 0;
+}
+
+input:only-child {
+    margin-bottom: 0;
+}
+
+input.forbidden {
+    border-color: var(--errorText);
+}
+
+
+input + span.errorMessage {
+    user-select: none;
+    font-size: .8em;
+    display:flex;
+    margin-top: -7.5px;
+    margin-bottom: 7.5px;
+    color: var(--errorIcon);
+}
+
+input + span.errorMessage span.material-icons {
+    font-size: 18px;
+    color: inherit;
+}

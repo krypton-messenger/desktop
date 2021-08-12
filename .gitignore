@@ -111,3 +111,4 @@ dist
 # Visual Studio Code data
 .vs/
 .vscode/
+krypton.code-workspace

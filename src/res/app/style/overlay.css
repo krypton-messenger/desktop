@@ -1,0 +1,51 @@
+.overlayContainer {
+    height:100%;
+    width:100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+    z-index: 99;
+}
+
+.overlay {
+    background: hsl(var(--c5));
+    padding: 20px;
+    z-index: 99;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    width: min(300px, 80vw);
+    transform:scale(.5);
+    opacity: 0;
+    transition: transform var(--transitionDuration), opacity var(--transitionDuration);
+
+}
+
+.overlayFocuser {
+    background: hsl(var(--c3));
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    opacity: 0;
+    transition: opacity var(--transitionDuration);
+}
+
+
+.overlayTitle {
+    padding-bottom: 15px;
+}
+
+
+.overlayContainer.in .overlay{
+    transform: none;
+    opacity: 1;
+}
+
+.overlayContainer.in .overlayFocuser{
+    opacity:.5;
+}

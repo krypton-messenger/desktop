@@ -1,0 +1,55 @@
+button {
+    padding: 10px 20px;
+    background: hsl(var(--c6));
+    border: 1px solid hsl(var(--c6) /.5);
+    margin-bottom: 7.5px;
+    color: hsl(var(--c4));
+    box-sizing: border-box;
+    transition: background var(--transitionDuration);
+    user-select: none;
+}
+
+button:focus,
+button:hover {
+    background: hsl(var(--c2));
+    outline: 0
+}
+
+button.materialIconButton:not(nav button) {
+    display: inline-flex;
+    margin: 6px;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    background: transparent;
+    border: 0px;
+    cursor: pointer;
+}
+
+button.materialIconButton:not(nav button):hover,
+button.materialIconButton:not(nav button):focus {
+    background: hsl(var(--c6))
+}
+
+button.labbeledButton {
+    text-align: left;
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    margin: 0;
+    padding: 15px;
+    align-items: center;
+    cursor: pointer;
+    border: 0;
+}
+
+button[disabled] {
+    opacity: 0.4;
+    cursor: default;
+}
+
+button[disabled]:hover,
+button[disabled]:focus {
+    background: transparent;
+}

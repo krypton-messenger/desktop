@@ -1,0 +1,34 @@
+.searchBarContainer input {
+    transition: transform var(--transitionDuration);
+    transform-origin: right;
+    width: 100%;
+    height: 60%;
+    border: 0;
+    border-radius: 5px;
+    background: hsl(var(--c6));
+    margin: 0;
+}
+
+.searchBarContainer:not(.searchbarVisible) input {
+    transform: scaleX(0);
+}
+
+.searchBarContainer {
+    grid-column: 2/3;
+    display: grid;
+    grid-template-columns: 1fr 52px;
+    position: relative;
+    place-items: center;
+}
+
+.searchBarContainer .closeSearchBar.materialIconButton, .searchBarContainer .searchBarOpener.materialIconButton {
+    position: absolute;
+    right: 0;
+    transition: transform var(--transitionDuration) var(--transitionDuration), filter var(--transitionDuration) var(--transitionDuration);
+}
+
+.searchBarContainer:not(.searchbarVisible) .closeSearchBar.materialIconButton, .searchBarContainer.searchbarVisible .searchBarOpener.materialIconButton {
+    transform: rotateY(90deg);
+    filter: opacity(0);
+    transition: transform var(--transitionDuration), filter var(--transitionDuration);
+}
