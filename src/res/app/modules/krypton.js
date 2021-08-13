@@ -39,8 +39,10 @@ class Krypton {
         this.generateMainContainer();
         this.ipc = ipc;
         this.downloadingFiles = {};
-        window.openLink = (url)=>{
-            this.ipc.send("openLink", {url})
+        window.openLink = (url) => {
+            this.ipc.send("openLink", {
+                url
+            })
         }
     }
 
@@ -144,7 +146,7 @@ class Krypton {
                 console.log("recieved chatlist", message.data);
                 if (this.waitingForChatList) {
                     this.waitingForChatList(message.data);
-                } else{
+                } else {
                     this.visibleScreen.chatList.chatListContent = chatListContent;
                 }
                 break;
@@ -160,7 +162,7 @@ class Krypton {
                     let msg = new MessageElement(i, this, true);
                     this.visibleScreen.messageView.appendMessage(msg, true);
                 }
-                this.requestChatList((chatListContent)=>{
+                this.requestChatList((chatListContent) => {
                     this.visibleScreen.chatList.chatListContent = chatListContent;
                 });
                 break;
@@ -200,7 +202,14 @@ class Krypton {
                     }
                 }
                 break;
-                
+            case "remoteServer":
+                console.log(message.data.url, message.data.qr);
+                this.showOverlay(this.OVERLAYID.STARTMOBILE, {
+                    title: "Open Kypton on mobile",
+                    url: message.data.url,
+                    qr: message.data.qr
+                });
+                break;
             default:
                 console.log("unrecognized command:", message.command, message.data);
                 break;
@@ -320,8 +329,32 @@ class Krypton {
 
                 overlay.show();
                 break;
-            case this.OVERLAYID.SETTINGS:
             case this.OVERLAYID.STARTMOBILE:
+                let svg = document.createElement("img");
+                svg.setAttribute("src", options.qr);
+                svg.classList.add("qrCode");
+                overlay.element.appendChild(svg);
+
+                let url = document.createElement("span");
+                url.appendChild(document.createTextNode(options.url));
+                url.classList.add("remoteServerUrl");
+                overlay.element.appendChild(url);
+
+                let okButton = new Button({
+                    type: "button",
+                    label: "Ok",
+                    events: [{
+                        type: "click",
+                        callback: ((_e) => {
+                            overlay.destroy();
+                        }).bind(this)
+                    }]
+                });
+                overlay.element.appendChild(okButton.element);
+
+                overlay.show();
+                break;
+            case this.OVERLAYID.SETTINGS:
             case this.OVERLAYID.MESSAGEDETAILS:
             case this.OVERLAYID.CHATDETAILS:
             case this.OVERLAYID.POPUP:

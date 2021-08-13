@@ -11,7 +11,7 @@ const {
     path = require("path"),
     fs = require("fs"),
     open = require("open")
-    forge = require("node-forge"), {
+forge = require("node-forge"), {
         Api
     } = require("./res/api"),
     config = require("./res/config"), {
@@ -25,7 +25,9 @@ const {
         KryptonWebSocket
     } = require("./res/kryptonWebSocket"),
     fileDecrypt = require("./res/fileDecrypt"),
-    fileEncrypt = require("./res/fileEncrypt");
+    fileEncrypt = require("./res/fileEncrypt"), {
+        RemoteServer
+    } = require("./res/remoteServer.js");
 
 class KryptonBackend {
     constructor() {
@@ -76,11 +78,20 @@ class KryptonBackend {
             this.chatKeyWs.listenChatKey();
         }
     }
+    sendIpc(command, data) {
+        for (let i of this.ipcs) {
+            i(command, data);
+        }
+    }
+    addIpc(callback) {
+        this.ipcs = this.ipcs ?? [];
+        this.ipcs.push(callback);
+    }
 
     async handleIpcMessage(event, arg) {
         switch (arg.command) {
             case "startUp":
-                this.sendIpc = (command, data) => {
+                this.addIpc((command, data) => {
                     console.log("sending ipc", {
                         command,
                         data
@@ -89,7 +100,8 @@ class KryptonBackend {
                         command,
                         data
                     });
-                }
+                });
+
                 if (this.config.get("signedIn")) this.showMain();
                 else this.sendIpc("showScreen", {
                     screenID: this.SCREENID.LOGIN,
@@ -214,6 +226,16 @@ class KryptonBackend {
                 break;
             case "startRemoteServer":
                 // start server for remote access
+                if (this.remoteServer) this.remoteServer.stop();
+                else {
+                    this.remoteServer = new RemoteServer(this.handleIpcMessage.bind(this));
+                    this.remoteServer.start();
+                    let qr = await this.remoteServer.generateQR();
+                    this.sendIpc("remoteServer", {
+                        url: this.remoteServer.url,
+                        qr
+                    })
+                }
                 break;
 
             case "getMime":
@@ -310,6 +332,7 @@ class KryptonBackend {
 
             default:
                 console.log(`uncaught ipc-command ${arg.command}, nothing done`);
+                console.log(arg);
                 break;
         }
 
@@ -341,4 +364,4 @@ class KryptonBackend {
         return parsePrivateKey(this.config.get("credentials:privateKey:encrypted"), this.config.get("credentials:password:sha256"));
     }
 }
-exports.KryptonBackend = KryptonBackend;
+module.exports = KryptonBackend;

@@ -6,10 +6,11 @@ body {
 :root {
     --navHeight: 20px;
     --transitionDuration: .2s;
+    --vh: 1vh;
 }
 
 main {
-    height: calc(100vh - var(--navHeight));
+    height: calc(100 * var(--vh) - var(--navHeight));
     position: relative;
 }
 

@@ -82,13 +82,13 @@ class MainScreen extends WindowScreen {
                 // }]
             }, {
                 materialIcon: "qr_code",
-                label: "Open on Mobile",
-                // events: [{
-                //     type: "click",
-                //     callback: (() => {
-                //         this.kryptonInstance.ipc.send("startRemoteServer")
-                //     }).bind(this)
-                // }]
+                label: "Open on Mobile (beta)",
+                events: [{
+                    type: "click",
+                    callback: (() => {
+                        this.kryptonInstance.ipc.send("startRemoteServer")
+                    }).bind(this)
+                }]
             }, {
                 materialIcon: "settings",
                 label: "Settings",

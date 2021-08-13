@@ -31,11 +31,13 @@ class MessageView {
         this.rootElement.classList.remove("filledMessageView");
     }
     selectChat(chatTile) {
-        this.deselectChat();
-        this.screen.sideMenu.close();
-        this.rootElement.innerHTML = "";
-        this.selectedChat = chatTile;
-        this.generateContent();
+        if(chatTile){
+            this.deselectChat();
+            this.screen.sideMenu.close();
+            this.rootElement.innerHTML = "";
+            this.selectedChat = chatTile;
+            this.generateContent();
+        }
     }
     deselectChat() {
         this.messages = [];
@@ -59,6 +61,7 @@ class MessageView {
         console.log(messageList);
         if (messageList.length == 0) this.showEmpty();
         else {
+            if(!this.selectedChat) this.selectChat(this.screen.chatList.chatListSections.flatMap(i=>i.chatTiles).filter(j=>j.data.chatId==messageList[0].chatId)[0]) // no chat was selected but the backend was ordered to give messages => select chat
             this.rootElement.classList.remove("emptyMessageView");
             this.rootElement.classList.remove("deselectedMessageView");
             this.rootElement.classList.add("filledMessageView");

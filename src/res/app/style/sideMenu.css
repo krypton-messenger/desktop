@@ -33,7 +33,7 @@
 }
 
 .sideMenu:not(.openSideMenu) .sideMenuFocuser {
-    bottom: 100vh !important;
+    bottom: calc(100 * var(--vh)) !important;
 }
 
 .sideMenuHeader {
