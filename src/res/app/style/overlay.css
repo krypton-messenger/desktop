@@ -19,11 +19,11 @@
     border-radius: 3px;
     display: flex;
     flex-direction: column;
+    gap: 13px;
     width: min(300px, 80vw);
     transform:scale(.5);
     opacity: 0;
     transition: transform var(--transitionDuration), opacity var(--transitionDuration);
-
 }
 
 .overlayFocuser {
@@ -38,6 +38,7 @@
 
 .overlayTitle {
     padding-bottom: 15px;
+    font-size: large;
 }
 
 
@@ -48,4 +49,8 @@
 
 .overlayContainer.in .overlayFocuser{
     opacity:.5;
+}
+
+.overlay *:not(.overlayTitle):not(button) {
+    font-size: smaller;
 }

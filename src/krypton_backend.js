@@ -65,15 +65,16 @@ class KryptonBackend {
 
     async showMain() {
         if (this.config.get("credentials:username") && this.config.get("server")) {
+            await this.chatKeyWs.start();
+            await this.ws.start();
+            await this.storage.getChats();
             this.sendIpc("showScreen", {
                 screenID: this.SCREENID.MAIN,
                 data: {
                     username: this.config.get("credentials:username"),
-                    server: this.config.get("server")
+                    server: this.config.get("server"),
                 }
             });
-            await this.chatKeyWs.start();
-            await this.ws.start();
             this.api.updateChatKeys();
             this.chatKeyWs.listenChatKey();
         }
@@ -123,12 +124,12 @@ class KryptonBackend {
                 break;
 
             case "logIn":
+                this.storage.init();
                 let logInResponse = await this.api.logIn(arg.data);
-                if (logInResponse.success) this.showMain();
+                if (logInResponse.success) this.showMain(true);
                 else this.sendIpc("error", {
                     error: logInResponse.error.description
                 });
-                this.storage.init();
                 break;
 
             case "signUp":
@@ -146,7 +147,7 @@ class KryptonBackend {
                     ...arg.data
                 });
                 // log in directly if it works
-                if (signUpResponse.success) this.showMain();
+                if (signUpResponse.success) this.showMain(true);
                 else this.sendIpc("error", {
                     error: signUpResponse.error.description
                 });
@@ -179,7 +180,7 @@ class KryptonBackend {
             case "requestChatList":
                 console.log("chatlist requested");
                 // send what we have
-                this.sendIpc("chatList", {
+                this.sendIpc("chatListPreflight", {
                     Chats: await this.storage.getChatsWithPreview(arg.data.query)
                 });
                 // get an update on the chats
@@ -207,17 +208,19 @@ class KryptonBackend {
 
             case "getMessages":
                 (async () => {
-                    console.log("second ipc");
                     this.sendIpc("messages", {
                         messages: await this.storage.loadMessages([{
                             chatId: arg.data.chatId,
                             chatKey: arg.data.chatKey
-                        }])
+                        }]),
+                        preflight: false
                     });
+                    console.log("second ipc");
                 }).bind(this)();
                 console.log("first ipc");
                 this.sendIpc("messages", {
-                    messages: await this.storage.getMessages(arg.data.query, arg.data.chatId, arg.data.offset)
+                    messages: await this.storage.getMessages(arg.data.query, arg.data.chatId, arg.data.offset),
+                    preflight: true
                 });
                 // for(let i of await this.api.getMessages(arg.data.chatId).data){
                 //     this.storage.decryptAndAddMessage(i);
@@ -355,7 +358,7 @@ class KryptonBackend {
         this.browserWindow.setMenu(new Menu());
         this.browserWindow.setIcon(nativeImage.createFromPath("res/icon.png"));
         this.browserWindow.loadFile(this.rootFile);
-        // this.browserWindow.webContents.openDevTools();
+        this.browserWindow.webContents.openDevTools();
         this.browserWindow.on("resize", () => {
             config.setAndSave("windowSize", this.browserWindow.getSize());
         });

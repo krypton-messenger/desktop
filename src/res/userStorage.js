@@ -51,6 +51,7 @@ class UserStorage {
                 for (let row of rows) {
                     this.kryptonInstance.ws.listenChat(row.chatId);
                 }
+                this.getPicturesOfMissing();
             });
         });
     }
@@ -173,7 +174,7 @@ class UserStorage {
         return new Promise((resolve, reject) => {
             this.db.all("SELECT * FROM messages WHERE messageId IS ?", [messageId], (error, rows) => {
                 if (error) reject(error);
-                if (rows.length > 0) resolve(true);
+                if (rows && rows.length > 0) resolve(true);
                 else resolve(false);
             });
         });

@@ -115,6 +115,17 @@ class MainScreen extends WindowScreen {
                     }).bind(this)
                 }]
             }, {
+                materialIcon: "info",
+                label: "Info",
+                events: [{
+                    type: "click",
+                    callback: (() => {
+                        this.kryptonInstance.showOverlay(this.kryptonInstance.OVERLAYID.INFO, {
+                            title: "Krypton Desktop"
+                        });
+                    }).bind(this)
+                }]
+            }, {
                 materialIcon: "code",
                 label: "Developer Options",
                 events: [{

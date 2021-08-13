@@ -17,7 +17,6 @@ export {
 class ChatList {
     constructor(screen) {
         this.screen = screen;
-
         this.rootElement = document.createElement("div");
         this.rootElement.classList.add("chatListContainer");
         this.rootElement.instance = this;
@@ -30,12 +29,18 @@ class ChatList {
      * @param {Array} value {Chats:[{title:"Chat with Admin", subtitle:"good morning, i was thinking we could get a beer?", timestamp: 1605483215, picture:"data:"},{...}] }
      */
     set chatListContent(value) {
-        this.parseChatList(value);
+        this.parseChatList(value, false);
         this.chatList.classList.remove("loading");
         this._chatListContent = value;
     }
     get chatListContent() {
-        return this._chatListContent;
+        return this._chatListContent ?? {};
+    }
+    setChatListContent(value, isPreflight) {
+        if (isPreflight) {
+            this._chatListContent = value;
+            this.parseChatList(value, true);
+        } else this.chatListContent = value;
     }
     /**
      * @param {Boolean} value
@@ -155,17 +160,17 @@ class ChatList {
         this.chatList = document.createElement("div");
         this.chatList.classList.add("chatList", "loading");
         this.rootElement.appendChild(this.chatList);
-        this.screen.kryptonInstance.requestChatList((chatList) => {
-            this.chatListContent = chatList;
-        })
+        this.screen.kryptonInstance.requestChatList();
     }
 
-    async parseChatList(chats) {
+    async parseChatList(chats, isPreflight) {
+        console.log("preflight chat list:", isPreflight);
         this.chatList.innerHTML = "";
         this.chatListSections = []
-        var hasNoChats = true;
+        var hasNoChats = !isPreflight;
         console.log(`chatlist:`, chats);
-        if (chats)
+        if (chats) {
+            if (Object.values(chats).flat().length > 0) this.chatList.classList.remove("loading");
             for (let i of Object.keys(chats)) {
                 console.log(i, chats[i]);
                 let section = new ChatListSection(chats[i], i, this);
@@ -173,6 +178,7 @@ class ChatList {
                 this.chatListSections.push(section);
                 this.chatList.appendChild(section.element);
             }
+        }
         console.log("hasNoChats", hasNoChats);
         this.hasNoChats = hasNoChats;
     }

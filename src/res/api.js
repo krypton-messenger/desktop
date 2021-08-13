@@ -163,11 +163,14 @@ class Api {
         // }
         return chatKeys;
     }
+    /**
+     * Gets chatkeys from Inbox, parses them and updates it into chatKeys
+     */
     async updateChatKeys() {
         let response = await this.request("getchatkeyinbox", {}, true);
         let newData = await this.decryptInbox(response.data)
         console.log("decrypted chat inbox:", newData);
-        this.setChats(newData);
+        this.setChats(newData, response.data);
     }
     /**
      * 
@@ -184,7 +187,7 @@ class Api {
      * @param {Object} newChatInfo 
      * @returns Promise {Boolean}
      */
-    async setChats(newChatInfo) {
+    async setChats(newChatInfo, infoToRemove) {
         let chatKeys = await this.getChats() ?? {};
         console.log("current chats:", chatKeys);
         for (let {
@@ -192,7 +195,7 @@ class Api {
                 chatId,
                 chatKey
             } of newChatInfo) {
-            console.log("trying with username: ", username)
+            console.log("trying to set usernames chatkey: ", username)
             if (chatKeys[username]) console.warn(`overwriting chatkey with ${username}`);
             chatKeys[username] = {
                 chatId,
@@ -201,9 +204,18 @@ class Api {
         };
         this.kryptonInstance.storage.addChats(chatKeys);
         let chatKeysEncrypted = this.kryptonInstance.encryptor.aesEncrypt(JSON.stringify(chatKeys), config.get("credentials:password:sha256"));
+        console.log("updating chat keys...")
         let response = await this.request("updatechatkeys", {
             content: chatKeysEncrypted
-        })
+        }, true);
+        if (response.success && infoToRemove) {
+            this.request("removechatkeys", {
+                content: JSON.stringify(infoToRemove)
+            }, true).then(response => {
+                console.log(`success removing chatkeys: ${response.success} (${JSON.stringify(response)})`);
+            });
+        }
+        console.log(`success: ${response.success} on updating chatkeys: ${JSON.stringify(response)}`);
         return response.success;
     }
 
@@ -316,12 +328,11 @@ class Api {
                 })
             });
 
-            // this.updateChatKey({
-            //     username,
-            //     chatKey,
-            //     chatId,
-            //     publicKey
-            // });
+            this.setChats([{
+                username,
+                chatKey,
+                chatId
+            }], false);
         } else {
             // the user allready has a chat with this contact, just select it
             this.kryptonInstance.sendIpc("selectChat", {

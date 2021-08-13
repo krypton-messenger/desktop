@@ -22,6 +22,9 @@ import {
 import {
     MessageElement
 } from "./messageElement.js";
+import {
+    about
+} from "./verisonInfo.js";
 
 export {
     Krypton
@@ -73,7 +76,8 @@ class Krypton {
             STARTMOBILE: 2,
             MESSAGEDETAILS: 3,
             CHATDETAILS: 4,
-            POPUP: 5
+            POPUP: 5,
+            INFO: 6
         }
     }
     set visibleScreen(screen) {
@@ -142,18 +146,20 @@ class Krypton {
                 this.visibleScreen.showError(message.data.error);
                 break;
 
+            case "chatListPreflight":
             case "chatList":
                 console.log("recieved chatlist", message.data);
                 if (this.waitingForChatList) {
                     this.waitingForChatList(message.data);
                 } else {
-                    this.visibleScreen.chatList.chatListContent = chatListContent;
+                    this.visibleScreen.chatList.setChatListContent(message.data, message.command === "chatListPreflight");
                 }
                 break;
 
             case "messages":
                 // console.log(message);
-                this.visibleScreen.messageView.displayMessages(message.data.messages);
+                this.visibleScreen.messageView.displayMessages(message.data.messages, message.data.preflight);
+                console.log(`recieved messages, preflight? ${message.data.preflight}`);
                 break;
 
             case "socketMessage":
@@ -340,7 +346,7 @@ class Krypton {
                 url.classList.add("remoteServerUrl");
                 overlay.element.appendChild(url);
 
-                let okButton = new Button({
+                var okButton = new Button({
                     type: "button",
                     label: "Ok",
                     events: [{
@@ -354,6 +360,23 @@ class Krypton {
 
                 overlay.show();
                 break;
+
+            case this.OVERLAYID.INFO:
+                overlay.element.appendChild(about);
+                var okButton = new Button({
+                    type: "button",
+                    label: "Ok",
+                    events: [{
+                        type: "click",
+                        callback: ((_e) => {
+                            overlay.destroy();
+                        }).bind(this)
+                    }]
+                });
+                overlay.element.appendChild(okButton.element);
+                overlay.show();
+                break;
+
             case this.OVERLAYID.SETTINGS:
             case this.OVERLAYID.MESSAGEDETAILS:
             case this.OVERLAYID.CHATDETAILS:

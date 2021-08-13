@@ -4,7 +4,6 @@ class Decryptor {
     constructor(kryptonInstance, getPublicKey) {
         this.kryptonInstance = kryptonInstance;
         this.getPublicKey = getPublicKey;
-        console.warn("mimeTypes:");
     }
     aesDecrypt(message, password) {
         try {

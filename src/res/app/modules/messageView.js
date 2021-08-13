@@ -30,13 +30,13 @@ class MessageView {
         this.rootElement.classList.remove("deselectedMessageView");
         this.rootElement.classList.remove("filledMessageView");
     }
-    selectChat(chatTile) {
-        if(chatTile){
+    selectChat(chatTile, dontRequestMessages) {
+        if (chatTile) {
             this.deselectChat();
             this.screen.sideMenu.close();
             this.rootElement.innerHTML = "";
             this.selectedChat = chatTile;
-            this.generateContent();
+            if(!dontRequestMessages) this.generateContent();
         }
     }
     deselectChat() {
@@ -57,26 +57,30 @@ class MessageView {
         this.showEmpty();
         this.screen.kryptonInstance.requestMessages(undefined, this.selectedChat.data.chatId, this.selectedChat.data.chatKey);
     }
-    displayMessages(messageList) {
+    displayMessages(messageList, isPreflight) {
         console.log(messageList);
-        if (messageList.length == 0) this.showEmpty();
+        if (messageList.length == 0 && isPreflight) this.showEmpty();
         else {
-            if(!this.selectedChat) this.selectChat(this.screen.chatList.chatListSections.flatMap(i=>i.chatTiles).filter(j=>j.data.chatId==messageList[0].chatId)[0]) // no chat was selected but the backend was ordered to give messages => select chat
-            this.rootElement.classList.remove("emptyMessageView");
-            this.rootElement.classList.remove("deselectedMessageView");
-            this.rootElement.classList.add("filledMessageView");
-            this.messages = this.messages ?? [];
-            // console.log(messageList);
-            for (let i of messageList) {
-                if (this.selectedChat.data.chatId == i.chatId) {
-                    let msg = new MessageElement(i, this.screen.kryptonInstance);
-                    this.appendMessage(msg);
+            if (!this.selectedChat && isPreflight) this.selectChat(this.screen.chatList.chatListSections.flatMap(i => i.chatTiles).filter(j => j.data.chatId == messageList[0].chatId)[0], true) // no chat was selected but the backend was ordered to give messages => select chat
+            // Boolean(this.selectedChat) should now be true if it is a preflight initiated by remote
+            if (this.selectedChat) {
+                this.rootElement.classList.remove("emptyMessageView");
+                this.rootElement.classList.remove("deselectedMessageView");
+                this.rootElement.classList.add("filledMessageView");
+                this.messages = this.messages ?? [];
+                // console.log(messageList);
+                for (let i of messageList) {
+                    if (this.selectedChat.data.chatId == i.chatId) {
+                        let msg = new MessageElement(i, this.screen.kryptonInstance);
+                        this.appendMessage(msg);
+                    }
                 }
+                this.sortMessages();
+                this.scrollToBottom()
             }
-            this.sortMessages();
-            this.scrollToBottom()
         }
     }
+
     sortMessages() {
         Array.from(this.messageContainer.childNodes)
             .filter(childNode => childNode != childNode.ELEMENT_NODE)
