@@ -2,7 +2,12 @@ const got = require("got"),
     config = require("./config"),
     encryption = require("./encryption");
 const forge = require("node-forge");
+const KryptonBackend = require("../krypton_backend");
 class Api {
+    /**
+     * 
+     * @param {KryptonBackend} kryptonInstance 
+     */
     constructor(kryptonInstance) {
         this.kryptonInstance = kryptonInstance;
     }
@@ -62,7 +67,7 @@ class Api {
         if (response.success) {
             config.set("credentials:privateKey:encrypted", response.data.privateKey);
 
-            let validUntil = new Date(new Date().getTime()+ response.data.expires * 1000);
+            let validUntil = new Date(new Date().getTime() + response.data.expires * 1000);
             console.log(`new token valid until ${validUntil}, that's ${response.data.expires} seconds`);
             config.setAndSave("credentials:authToken", {
                 token: response.data.token,
@@ -206,7 +211,7 @@ class Api {
         return await this.request("getMessages", {
             chatid: chatId,
             offset,
-            count
+            limit: count
         }, false);
     }
 

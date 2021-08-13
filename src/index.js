@@ -1,2 +1,2 @@
-const { KryptonBackend} = require("./krypton_backend");
+const KryptonBackend = require("./krypton_backend");
 new KryptonBackend();

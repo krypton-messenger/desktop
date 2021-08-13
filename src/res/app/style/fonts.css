@@ -1,3 +1,7 @@
+@font-face {
+    font-family: "Material Icons";
+    src: url(../resources/fonts/MaterialIcons-Regular.ttf);
+}
 
 @font-face {
     font-family: poppins;

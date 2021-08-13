@@ -31,7 +31,7 @@
 
 .hasPicture .chatTilePicture.failedPicture::before {
     content: "person";
-    font-family: materialIcons;
+    font-family: "Material Icons";
     font-size: 60px;
 }
 

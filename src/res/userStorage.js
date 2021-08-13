@@ -90,7 +90,7 @@ class UserStorage {
             this.db.all(`SELECT publicKey FROM publicKeys WHERE username LIKE ?`, [username], async (error, rows) => {
                 console.warn(`getting publickey of ${username}`, error, rows);
                 if (error) reject(error);
-                else if (rows) resolve(encryption.parsePublicKey(rows[0].publicKey));
+                else if (rows.length>0) resolve(encryption.parsePublicKey(rows[0].publicKey));
                 else {
                     let pem = await this.api.getPublicKey(username, true);
                     this.addPublicKey(pem, username);
@@ -154,7 +154,7 @@ class UserStorage {
             } of chats) {
             console.log("locaing messages of chat", chatId, chatKey);
             // collect all data
-            let response = await this.api.getMessages(chatId, 0, Infinity);
+            let response = await this.api.getMessages(chatId, 0, "ALL");
             console.log(response);
             let messages = [];
             for (let messageData of response.data) {
@@ -193,7 +193,6 @@ class UserStorage {
         let messageId = messageData.message_id;
         if (!await this.hasMessage(messageId)) {
             console.warn("message not known yet, adding...")
-            console.log(messageData.chatKey)
             let {
                 sender,
                 verified,
