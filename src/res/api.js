@@ -42,11 +42,13 @@ class Api {
     }
     checkTokenValidity() {
         return new Promise(async (resolve, _reject) => {
-            let tolerance = 5000;
-            let valid = config.get("credentials:authToken:validUntil") - tolerance < new Date().getTime();
+            let tolerance = 5000; // lets say it takes up to 5 seconds to reach the server...
+            let validUntil = new Date(config.get("credentials:authToken:validUntil")).getTime() - tolerance;
+            let valid = validUntil > new Date().getTime();
             if (valid) {
                 resolve(true);
             } else {
+                console.warn(`token was invalid: ${validUntil} (${(config.get("credentials:authToken:validUntil"))})`);
                 await this.authenticate();
                 resolve(true);
             }
@@ -60,12 +62,11 @@ class Api {
         if (response.success) {
             config.set("credentials:privateKey:encrypted", response.data.privateKey);
 
-            let validUntil = new Date();
-            validUntil.setSeconds(validUntil.getSeconds() + response.data.expires);
-
+            let validUntil = new Date(new Date().getTime()+ response.data.expires * 1000);
+            console.log(`new token valid until ${validUntil}, that's ${response.data.expires} seconds`);
             config.setAndSave("credentials:authToken", {
                 token: response.data.token,
-                validUntil
+                validUntil: validUntil.getTime()
             });
             return response;
         } else throw response;
@@ -181,7 +182,11 @@ class Api {
     async setChats(newChatInfo) {
         let chatKeys = await this.getChats() ?? {};
         console.log("current chats:", chatKeys);
-        for (let {username, chatId, chatKey} of newChatInfo) {
+        for (let {
+                username,
+                chatId,
+                chatKey
+            } of newChatInfo) {
             console.log("trying with username: ", username)
             if (chatKeys[username]) console.warn(`overwriting chatkey with ${username}`);
             chatKeys[username] = {
@@ -319,11 +324,15 @@ class Api {
             });
         }
     }
-    async getProfilePicture(user){
-        return (await this.request("getprofilepicture", {user})).data;
+    async getProfilePicture(user) {
+        return (await this.request("getprofilepicture", {
+            user
+        })).data;
     }
-    async setProfilePicture(uri){
-        let result = await this.request("setprofilepicture", {profilePictureURI:uri}, true);
+    async setProfilePicture(uri) {
+        let result = await this.request("setprofilepicture", {
+            profilePictureURI: uri
+        }, true);
         console.log(result);
         return result.success;
     }

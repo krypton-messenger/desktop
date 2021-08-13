@@ -87,7 +87,7 @@ class UserStorage {
     }
     async getPublicKey(username) {
         return new Promise((resolve, reject) => {
-            this.db.run(`SELECT publicKey FROM publicKeys WHERE username is ?`, [username], async (error, rows) => {
+            this.db.all(`SELECT publicKey FROM publicKeys WHERE username LIKE ?`, [username], async (error, rows) => {
                 console.warn(`getting publickey of ${username}`, error, rows);
                 if (error) reject(error);
                 else if (rows) resolve(encryption.parsePublicKey(rows[0].publicKey));
@@ -100,15 +100,15 @@ class UserStorage {
         });
     }
     async addPublicKey(pem, username) {
-        this.db.run(`UPDATE publicKeys SET publicKey=? WHERE username IS ?`, [pem, username]);
+        this.db.run(`INSERT OR IGNORE INTO publicKeys(publicKey, username) VALUES(?, ?);`, [pem, username]);
     }
-    async getPublicKeysOfMissing() {
-        this.db.all(`SELECT DISTINCT sender FROM messages WHERE sender NOT IN (SELECT username FROM publicKeys)`, (error, rows) => {
+    getPublicKeysOfMissing() {
+        this.db.all(`SELECT DISTINCT sender FROM messages WHERE sender NOT IN (SELECT username FROM publicKeys)`,async (error, rows) => {
             if (error) return error;
             console.log(`getting publickey of missing`, error, rows);
             for (let i of rows) {
                 console.log(`getting publickey of ${i.username}`);
-                this.addPublicKey(this.api.getPublicKey(i.username, true), i.username)
+                this.addPublicKey(await this.api.getPublicKey(i.username, true), i.username)
             }
         });
     }
