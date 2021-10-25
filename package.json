@@ -18,12 +18,12 @@
   "author": "Tim T.",
   "license": "AGPL-3.0",
   "devDependencies": {
-    "electron": "^12.0.1",
-    "electron-packager": "^15.2.0",
+    "electron": "^12.2.2",
+    "electron-packager": "^15.4.0",
     "electron-winstaller": "^5.0.0"
   },
   "dependencies": {
-    "dayjs": "^1.10.5",
+    "dayjs": "^1.10.7",
     "exec-sh": "^0.4.0",
     "fs": "0.0.1-security",
     "fs-extra": "^10.0.0",
@@ -32,16 +32,16 @@
     "ip": "^1.1.5",
     "material-components-web": "^10.0.0",
     "mime": "^2.5.2",
-    "mocha": "^9.0.1",
-    "nconf": "^0.11.2",
+    "mocha": "^9.1.2",
+    "nconf": "^0.11.3",
     "node-forge": "^0.10.0",
-    "open": "^8.2.1",
-    "os": "^0.1.1",
+    "open": "^8.3.0",
+    "os": "^0.1.2",
     "path": "^0.12.7",
     "qrcode": "^1.4.4",
     "serve-static": "^1.14.1",
     "showdown": "^1.9.1",
     "sqlite3": "^5.0.2",
-    "ws": "^7.5.0"
+    "ws": "^7.5.5"
   }
 }
