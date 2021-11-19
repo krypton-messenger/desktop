@@ -57,7 +57,7 @@
       "icon": "assets/icons/icon.icns"
     },
     "linux": {
-      "cateogry": "Chat",
+      "category": "Network",
       "target": ["snap", "apk"],
       "synopsis": "Krypton Desktop",
       "icon": "assets/icons/icon.png"
