@@ -56,17 +56,24 @@
     "copyright": "Copyright © 2021 ttschnz",
     "mac": {
       "category": "public.app-category.social-networking",
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "icon": "assets/icons/icon.icns"
     },
     "linux": {
       "category": "Network",
-      "target": ["snap", "apk"],
+      "target": [
+        "snap",
+        "apk"
+      ],
       "synopsis": "Krypton Desktop",
       "icon": "assets/icons/icon.png"
     },
     "win": {
-      "target": ["msi"],
+      "target": [
+        "msi"
+      ],
       "icon": "assets/icons/icon.ico"
     }
   }
