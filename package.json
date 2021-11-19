@@ -2,7 +2,7 @@
   "name": "krypton_desktop",
   "version": "1.0.0",
   "description": "Krypton Messenger for Desktop",
-  "repository": "",
+  "repository": "https://github.com/krypton-messenger/desktop",
   "main": "./src/index.js",
   "scripts": {
     "test": "mocha ./src/start.js",
@@ -12,7 +12,6 @@
     "package": "electron-packager . --overwrite --all --icon=assets/icons/icon --prune=true --out=release-builds",
     "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icons/icon.icns --prune=true --out=release-builds",
     "package-win": "electron-packager . krypton-desktop --overwrite --platform=win32 --arch=ia32 --icon=assets/icons/icon.ico --prune=true --out=release-builds --version-string.ProductName=\"Krypton Desktop\"",
-    "package-linux": "electron-packager . krypton-desktop --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/icon.png --prune=true --out=release-builds"
   },
   "keywords": [],
   "author": "Tim T.",
@@ -43,5 +42,25 @@
     "showdown": "^1.9.1",
     "sqlite3": "^5.0.2",
     "ws": "^7.5.5"
+  },
+  "build": {
+    "appId": "ch.ttschnz.kr",
+    "productName": "Krypton Desktop",
+    "copyright": "Copyright © 2021 ttschnz",
+    "mac": {
+      "category": "public.app-category.social-networking",
+      "target": ["dmg"],
+      "icon": "assets/icons/icon.icns"
+    },
+    "linux": {
+      "cateogry": "Network",
+      "target": ["snap", "apk"],
+      "synopsis": "Krypton Desktop",
+      "icon": "assets/icons/icon.png"
+    },
+    "win": {
+      "target": ["msi"],
+      "icon": "assets/icons/icon.ico"
+    }
   }
 }
