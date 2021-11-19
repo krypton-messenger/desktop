@@ -60,7 +60,11 @@
       "category": "Network",
       "target": ["snap", "apk"],
       "synopsis": "Krypton Desktop",
-      "icon": "assets/icons/icon.png"
+      "icon": "assets/icons/icon.png",
+      "maintainer": {
+        "name": "ttschnz",
+        "email": "ttschnz@kr.ttschnz.ch"
+      }
     },
     "win": {
       "target": ["msi"],
