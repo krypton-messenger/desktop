@@ -20,6 +20,8 @@
   "license": "AGPL-3.0",
   "devDependencies": {
     "electron": "^12.2.2",
+    "electron-builder": "^22.13.1",
+    "electron-installer-dmg": "^3.0.0",
     "electron-packager": "^15.4.0",
     "electron-winstaller": "^5.0.0"
   },
@@ -55,7 +57,7 @@
       "icon": "assets/icons/icon.icns"
     },
     "linux": {
-      "cateogry": "Network",
+      "cateogry": "Chat",
       "target": ["snap", "apk"],
       "synopsis": "Krypton Desktop",
       "icon": "assets/icons/icon.png"
