@@ -1,6 +1,6 @@
 :root {
     --h: 168deg;
-    --c1: var(--h) 25% 48%;
+    --c1: var(--h) 4% 19%;
     --c2: calc(var(--h) + 1deg) 25% 29%;
     --c3: calc(var(--h) - 7deg) 15% 5%;
     --c4: calc(var(--h) - 9deg) 50% 100%;
@@ -14,7 +14,7 @@
 }
 
 :root.light {
-    --c1: var(--h) 26% 50%;
+    --c1: var(--h) 0% 100%;
     --c2: calc(var(--h) + 1deg) 0% 70%;
     --c3: calc(var(--h) - 7deg) 0% 27%;
     --c4: calc(var(--h) - 9deg) 0% 10%;

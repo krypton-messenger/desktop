@@ -13,7 +13,7 @@ class MessageElement {
         if (this.socketMessage) this.element.classList.add("socketMessage");
         this.element.classList.add("messageElement", messageData.direction);
         if (messageData.verified) this.element.classList.add("verified");
-        else this.element.classList.add("unverified");
+        else {this.element.classList.add("unverified"); this.element.setAttribute("title", "message verification failed")};
         this.element.instance = this;
         this.messageData = messageData;
 
@@ -26,7 +26,7 @@ class MessageElement {
     }
     set meta(value) {
         if (!this.messageMeta) {
-            this.messageMeta = document.createElement("div");
+            this.messageMeta = document.createElement("span");
             this.messageMeta.classList.add("messageMeta");
             this.element.appendChild(this.messageMeta);
         }

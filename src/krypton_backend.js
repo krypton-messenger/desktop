@@ -178,16 +178,18 @@ class KryptonBackend {
                 break;
 
             case "requestChatList":
+                let requestTime = new Date().getTime();
+                this.lastChatListRequest = requestTime;
                 console.log("chatlist requested");
                 // send what we have
-                this.sendIpc("chatListPreflight", {
-                    Chats: await this.storage.getChatsWithPreview(arg.data.query)
-                });
-                // get an update on the chats
+                this.sendIpc("chatListPreflight", await this.storage.getChatsWithPreview(arg.data.query));
+                // get an update on the chats, but only if no other request was sent in the time of uptating
                 this.storage.addChats(await this.api.getChats()).then(async () => {
-                    this.sendIpc("chatList", {
-                        Chats: await this.storage.getChatsWithPreview(arg.data.query)
-                    });
+                    let result = await this.storage.getChatsWithPreview(arg.data.query);
+                    try{
+                        result.Users = (await this.api.searchUser(arg.data.query ?? "")).map(x=>{return{username:x}});
+                    }catch(_e){}
+                    if (this.lastChatListRequest == requestTime) this.sendIpc("chatList", result);
                 });
                 break;
 

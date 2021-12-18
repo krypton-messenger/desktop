@@ -14,6 +14,7 @@ class UserStorage {
     }
     init() {
         this.db = new sqlite3.Database(this.dbLocation);
+        this.db.on('trace', sqlQuery => console.warn('query excecuted:', sqlQuery));
         this.db.run(`CREATE TABLE IF NOT EXISTS chats (
             chatId TEXT PRIMARY KEY,
             chatKey TEXT NOT NULL,
@@ -55,6 +56,61 @@ class UserStorage {
             });
         });
     }
+    searchForChats(query) {
+        return new Promise((resolve, reject) => {
+            console.log("query:", query);
+            this.db.all(`SELECT * FROM (
+                SELECT * from messages
+                LEFT JOIN chats
+                ON chats.chatId = messages.chatId
+                WHERE chats.username LIKE ?
+                ORDER BY timestamp DESC
+              )
+              GROUP BY chatId;`, [`%${query}%`], (error, rows) => {
+                if (error) {
+                    console.error(error);
+                    reject(error);
+                } else resolve(rows);
+                console.log("chats with preview:", rows);
+            })
+        });
+    }
+
+    searchForFiles(query) {
+        return new Promise((resolve, reject) => {
+            console.log("query:", query);
+            this.db.all(`
+            SELECT * from messages
+            LEFT JOIN chats
+            ON chats.chatId = messages.chatId
+            WHERE messages.messageType = 'file' 
+            AND json_extract(json_extract(messages.content,'$.value'), '$.fileName') LIKE ? 
+            ORDER BY timestamp DESC`, [`%${query}%`], (error, rows) => {
+                if (error) {
+                    console.error(error);
+                    reject(error);
+                } else resolve(rows);
+                console.log("chats with preview:", rows);
+            })
+        });
+    }
+
+    searchForMessages(query) {
+        return new Promise((resolve, reject) => {
+            console.log("query:", query);
+            this.db.all(`SELECT * from messages
+            LEFT JOIN chats
+            ON chats.chatId = messages.chatId
+            WHERE (json_extract(messages.content,'$.value') LIKE ? AND messages.messageType = 'text')
+            ORDER BY timestamp DESC;`, [`%${query}%`], (error, rows) => {
+                if (error) {
+                    console.error(error);
+                    reject(error);
+                } else resolve(rows);
+                console.log("chats with preview:", rows);
+            })
+        });
+    }
     getChatsWithPreview(query) {
         this.lastSearchQuery = query;
         // return {
@@ -68,22 +124,36 @@ class UserStorage {
         //         // username
         //     }]
         // };
+        // titles: Chats, Users, Messages, Files
         // return [];
-        return new Promise((resolve, reject) => {
-            this.db.all(`
-            SELECT * FROM 
-                (SELECT * from chats
-                    LEFT JOIN messages
-                    on chats.chatId = messages.chatId
-                ORDER BY timestamp DESC)
-            GROUP BY chatId`, (error, rows) => {
-                if (error) {
-                    console.error(error);
-                    reject(error);
-                } else resolve(rows);
-                console.log("chats with preview:", rows);
-            })
-        });
+        if (query) {
+            // Chats
+            return new Promise(async (resolve, reject) => {
+                resolve({
+                    Chats: await this.searchForChats(query),
+                    Messages: await this.searchForMessages(query),
+                    Files: await this.searchForFiles(query)
+                });
+            });
+        } else {
+            return new Promise((resolve, reject) => {
+                this.db.all(`
+                SELECT * FROM 
+                    (SELECT * from chats
+                        LEFT JOIN messages
+                        on chats.chatId = messages.chatId
+                    ORDER BY timestamp DESC)
+                GROUP BY chatId`, (error, rows) => {
+                    if (error) {
+                        console.error(error);
+                        reject(error);
+                    } else resolve({
+                        Chats: rows
+                    });
+                    console.log("chats with preview:", rows);
+                })
+            });
+        }
 
     }
     async getPublicKey(username) {
@@ -91,7 +161,7 @@ class UserStorage {
             this.db.all(`SELECT publicKey FROM publicKeys WHERE username LIKE ?`, [username], async (error, rows) => {
                 console.warn(`getting publickey of ${username}`, error, rows);
                 if (error) reject(error);
-                else if (rows.length>0) resolve(encryption.parsePublicKey(rows[0].publicKey));
+                else if (rows.length > 0) resolve(encryption.parsePublicKey(rows[0].publicKey));
                 else {
                     let pem = await this.api.getPublicKey(username, true);
                     this.addPublicKey(pem, username);
@@ -104,7 +174,7 @@ class UserStorage {
         this.db.run(`INSERT OR IGNORE INTO publicKeys(publicKey, username) VALUES(?, ?);`, [pem, username]);
     }
     getPublicKeysOfMissing() {
-        this.db.all(`SELECT DISTINCT sender FROM messages WHERE sender NOT IN (SELECT username FROM publicKeys)`,async (error, rows) => {
+        this.db.all(`SELECT DISTINCT sender FROM messages WHERE sender NOT IN (SELECT username FROM publicKeys)`, async (error, rows) => {
             if (error) return error;
             console.log(`getting publickey of missing`, error, rows);
             for (let i of rows) {
@@ -120,8 +190,8 @@ class UserStorage {
             for (let i of rows) {
                 console.log(`getting picture of ${i.username}`);
                 let profilePicture = await this.kryptonInstance.api.getProfilePicture(i.username);
-                this.db.run(`UPDATE chats SET picture=? WHERE chatId LIKE ?`, [profilePicture, i.chatId], (error)=>{
-                    if(error) console.error(error);
+                this.db.run(`UPDATE chats SET picture=? WHERE chatId LIKE ?`, [profilePicture, i.chatId], (error) => {
+                    if (error) console.error(error);
                 });
             }
         });
@@ -142,9 +212,7 @@ class UserStorage {
         await this.loadMessages(Object.values(values));
         await this.getPublicKeysOfMissing();
         this.getPicturesOfMissing();
-        this.kryptonInstance.sendIpc("chatList", {
-            Chats: await this.getChatsWithPreview(this.lastSearchQuery)
-        });
+        this.kryptonInstance.sendIpc("chatList", await this.getChatsWithPreview(this.lastSearchQuery));
         return true;
     }
     async loadMessages(chats) {
@@ -235,7 +303,7 @@ class UserStorage {
         });
     }
 
-    addMessage(messageId, chatId, sender, direction, timestamp, content, verified, messageType, encryptionType, systemComment) {
+    addMessage(messageId, chatId, sender, direction, timestamp, content, verified, messageType = "text", encryptionType, systemComment) {
         return new Promise((resolve, reject) => {
             console.log(`adding message #${messageId} to db`);
             this.db.run(`INSERT INTO messages(messageId, chatId, sender, direction, timestamp, content, verified, messageType, encryptionType, systemComment) 

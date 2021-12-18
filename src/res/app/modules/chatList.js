@@ -46,7 +46,7 @@ class ChatList {
      * @param {Boolean} value
      */
     set hasNoChats(value) {
-        if (value) {
+        if (value && !this.createChatButton) {
             console.log("has no chats!");
             this.chatList.classList.add("noChats");
             this.createChatButton = new Button({
@@ -65,7 +65,12 @@ class ChatList {
         } else if (this.createChatButton) {
             console.log("removed button");
             this.chatList.classList.remove("noChats");
-            this.chatList.removeChild(this.createChatButton.element);
+            try {
+                this.chatList.removeChild(this.createChatButton.element);
+            } catch (_e) {
+                console.warn("couldn't remove button:", this.chatList, this.createChatButton.element, this);
+            }
+            this.createChatButton = false;
         }
         this._hasNoChats = value;
     }
@@ -88,6 +93,11 @@ class ChatList {
         this.searchBarContainer.classList.add("searchbarVisible");
         this.searchBar.element.focus();
     }
+
+    applySearchQuery() {
+        console.log(`keypress on searchbar`);
+        this.search(this.searchBar.element.value);
+    }
     addSearchBar() {
         this.searchBarContainer = document.createElement("div");
         this.searchBarContainer.classList.add("searchBarContainer");
@@ -98,11 +108,8 @@ class ChatList {
             type: "text",
             placeholder: "Search",
             events: [{
-                    type: "keydown",
-                    callback: ((e) => {
-                        console.log(`keypress on searchbar:`, e);
-                        this.search(this.searchBar.element.value);
-                    }).bind(this)
+                    type: "keyup",
+                    callback: this.applySearchQuery.bind(this)
                 },
                 {
                     type: "blur",
@@ -139,6 +146,7 @@ class ChatList {
                     this.searchBarContainer.classList.remove("searchbarVisible");
                     this.searchBar.element.value = "";
                     this.searchBar.element.blur();
+                    this.applySearchQuery();
                 }).bind(this)
             }],
             attr: {
@@ -168,18 +176,29 @@ class ChatList {
         this.chatList.innerHTML = "";
         this.chatListSections = []
         var hasNoChats = !isPreflight;
-        console.log(`chatlist:`, chats);
+        console.log(`chatlist:`, chats, Object.values(chats).length);
         if (chats) {
-            if (Object.values(chats).flat().length > 0) this.chatList.classList.remove("loading");
+            if (Object.values(chats).length > 1) {
+                this.chatList.classList.add("searchResult");
+                this.hasNoChats = false;
+            } else if (Object.values(chats).flat().length > 0) this.chatList.classList.remove("loading")
+            else this.chatList.classList.remove("searchResult");
             for (let i of Object.keys(chats)) {
-                console.log(i, chats[i]);
-                let section = new ChatListSection(chats[i], i, this);
+                console.log(i, chats[i], chats);
+                let section;
+                if(i == "Users") section = new ChatListSection(chats[i], i, this, ((chatTile) => {
+                    console.log(chatTile);
+                    this.screen.kryptonInstance.ipc.send("createChat", {
+                        username: chatTile.data.username
+                    });
+                }).bind(this));
+                else section = new ChatListSection(chats[i], i, this);
                 hasNoChats = section.empty && hasNoChats; // we want to keep it to false if it is ever false
                 this.chatListSections.push(section);
                 this.chatList.appendChild(section.element);
             }
         }
         console.log("hasNoChats", hasNoChats);
-        this.hasNoChats = hasNoChats;
+        this.hasNoChats = Object.values(chats).length > 1 ? false : hasNoChats;
     }
 }

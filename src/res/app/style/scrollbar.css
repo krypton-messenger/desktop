@@ -6,7 +6,7 @@ textarea::-webkit-scrollbar {
 ::-webkit-scrollbar {
     width: .5em;
     height: .5em;
-    background: hsla(var(--c6));
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {

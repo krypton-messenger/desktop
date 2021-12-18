@@ -5,7 +5,8 @@ export {
     ChatListSection
 };
 class ChatListSection {
-    constructor(chats, title, chatListInstance) {
+    constructor(chats, title, chatListInstance, overrideCallback) {
+        this.overrideCallback = overrideCallback;
         this.chatListInstance = chatListInstance;
 
         this.element = document.createElement("div");
@@ -42,6 +43,7 @@ class ChatListSection {
 
     }
     set chats(value) {
+        console.info("creating chatlistsection", value);
         this._chats = value;
         this.chatTiles = [];
         this.chatTileContainer = document.createElement("div");

@@ -15,7 +15,7 @@ class ChatTile {
 
         this.element = document.createElement("div");
         this.element.classList.add("chatTile");
-        this.element.addEventListener("click", (() => {
+        this.element.addEventListener("click", this.chatListSectionInstance.overrideCallback ? this.chatListSectionInstance.overrideCallback.bind(this.chatListSectionInstance.chatListInstance, this): (() => {
             this.chatListSectionInstance.chatListInstance.screen.messageView.selectChat(this);
         }).bind(this));
         this.element.instance = this;
@@ -56,8 +56,12 @@ class ChatTile {
                 second: "2-digit"
             }))
             this.element.appendChild(this.date);
+        }else if(this.chatListSectionInstance.overrideCallback){
+            this.subtitle.appendChild(document.createTextNode("Click to create chat"));
+            this.subtitle.classList.add("description");
         } else {
             this.subtitle.appendChild(document.createTextNode("Chat created"));
+            this.subtitle.classList.add("description");
         }
         this.subtitle.setAttribute("title", this.subtitle.innerText);
         this.element.appendChild(this.subtitle);

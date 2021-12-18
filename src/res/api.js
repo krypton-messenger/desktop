@@ -352,5 +352,10 @@ class Api {
         console.log(result);
         return result.success;
     }
+    async searchUser(user) {
+        return (await this.request("search", {
+            user
+        })).data;
+    }
 }
 exports.Api = Api;

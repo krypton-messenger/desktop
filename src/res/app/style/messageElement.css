@@ -146,3 +146,32 @@
     transform: translateX(100%);
     opacity: 0;
 }
+
+.messageElement.unverified::after {
+    content: "warning";
+    font-family: 'Material Icons';
+    font-size: 24px;
+    position:absolute;
+    top:50%;
+    color:var(--errorIcon);
+}
+
+.messageElement.unverified.recieved::after{
+    right:0;
+    transform:translate(150%, -50%);
+}
+
+
+.messageElement.unverified.sent::after{
+    right:unset;
+    left:0;
+    transform:translate(-150%, -50%);
+}
+
+.messageElement.unverified {
+    background: var(--errorIcon);
+}
+
+.messageElement.unverified::before {
+    border-color: var(--errorIcon);
+}
